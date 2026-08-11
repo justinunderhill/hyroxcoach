@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { ProfileSummary } from "@/components/profile-summary";
 import { SignOutButton } from "@/components/sign-out-button";
+import { WeeklyStats } from "@/components/weekly-stats";
 import { WorkoutFeed } from "@/components/workout-feed";
 import { getServerAuth } from "@/lib/auth/server";
 
@@ -30,6 +31,9 @@ export default async function DashboardPage() {
             <p className="mt-2 text-sm leading-6 text-stone-600">Runs, MMA, strength, walks or HYROX-specific work.</p>
             <Link className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-[#15271e] px-4 text-sm font-bold text-white" href="/workouts">Log workout</Link>
           </div>
+        </section>
+        <section className="mt-8">
+          <WeeklyStats />
         </section>
         <section className="mt-8">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">Recent activity</p>
