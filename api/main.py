@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from api.config import frontend_origins
 from api.routers.profiles import router as profiles_router
+from api.routers.workouts import router as workouts_router
 
 
 class HealthResponse(BaseModel):
@@ -31,6 +32,7 @@ app.add_middleware(
 )
 
 app.include_router(profiles_router)
+app.include_router(workouts_router)
 
 
 def error_response(code: str, message: str, request_id: str) -> dict[str, dict[str, str]]:

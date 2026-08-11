@@ -57,7 +57,15 @@ class CurrentUserResponse(BaseModel):
     email: EmailStr | None
 
 
+class MeTeamResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    name: str
+    role: Literal["owner", "athlete"]
+
+
 class MeResponse(BaseModel):
     user: CurrentUserResponse
     profile: AthleteProfileResponse | None
-    active_teams: list[dict[str, str]] = Field(default_factory=list)
+    active_teams: list[MeTeamResponse] = Field(default_factory=list)
