@@ -1,0 +1,1 @@
+"""HYROX Coach API package."""

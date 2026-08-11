@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+:root {
+  --background: #eceee7;
+  --foreground: #15221b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 10% 10%, rgb(216 255 98 / 18%), transparent 28rem),
+    linear-gradient(145deg, #f4f3ef 0%, #e8ece4 100%);
+  color: var(--foreground);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+.font-mono {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: #d8ff62;
+  color: #15221b;
+}

@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: npm ci
+      - run: uv sync --locked
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: uv run ruff check .
+      - run: uv run pytest
+      - run: uv run alembic upgrade head --sql
+        env:
+          DATABASE_URL_UNPOOLED: postgresql://ci:ci@localhost/hyrox_ci
+      - run: npm run build
