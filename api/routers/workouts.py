@@ -11,7 +11,6 @@ from api.auth import AuthenticatedUser, get_current_user
 from api.database import get_session, set_request_user
 from api.models import (
     ExercisePerformance,
-    TeamMembership,
     Workout,
     WorkoutCategory,
     WorkoutCategoryLink,
@@ -24,30 +23,11 @@ from api.schemas.workouts import (
     WorkoutResponse,
     WorkoutUpdate,
 )
+from api.services.teams import active_team_ids, resolve_primary_team_id
 
 router = APIRouter(prefix="/api", tags=["workouts"])
 CurrentUser = Annotated[AuthenticatedUser, Depends(get_current_user)]
 DatabaseSession = Annotated[Session, Depends(get_session)]
-
-
-def active_team_ids(session: Session, user_id: str) -> list[UUID]:
-    return list(
-        session.scalars(
-            select(TeamMembership.team_id).where(
-                TeamMembership.user_id == user_id, TeamMembership.status == "active"
-            )
-        )
-    )
-
-
-def resolve_primary_team_id(session: Session, user_id: str) -> UUID:
-    team_ids = active_team_ids(session, user_id)
-    if not team_ids:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Complete your athlete profile before logging a workout.",
-        )
-    return team_ids[0]
 
 
 def resolve_category_ids(session: Session, slugs: list[str]) -> list[UUID]:

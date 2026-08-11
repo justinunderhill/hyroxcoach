@@ -213,3 +213,38 @@ class ExercisePerformance(Base):
         "metadata", JSON().with_variant(postgresql.JSONB, "postgresql"), default=dict
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class Meal(Base):
+    __tablename__ = "meals"
+    __table_args__ = (
+        CheckConstraint("calories IS NULL OR calories >= 0", name="ck_meals_calories_positive"),
+        CheckConstraint("protein_g IS NULL OR protein_g >= 0", name="ck_meals_protein_positive"),
+        CheckConstraint("carbs_g IS NULL OR carbs_g >= 0", name="ck_meals_carbs_positive"),
+        CheckConstraint("fat_g IS NULL OR fat_g >= 0", name="ck_meals_fat_positive"),
+        CheckConstraint("visibility IN ('team', 'private')", name="ck_meals_visibility"),
+        CheckConstraint("source IN ('manual', 'image')", name="ck_meals_source"),
+        Index("ix_meals_user_occurred", "user_id", "occurred_at"),
+        Index("ix_meals_team_occurred", "team_id", "occurred_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    user_id: Mapped[str] = mapped_column(String(255))
+    team_id: Mapped[UUID] = mapped_column(Uuid, ForeignKey("teams.id", ondelete="RESTRICT"))
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    meal_type: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    description: Mapped[str] = mapped_column(String(500))
+    calories: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    protein_g: Mapped[Decimal | None] = mapped_column(Numeric(6, 1), nullable=True)
+    carbs_g: Mapped[Decimal | None] = mapped_column(Numeric(6, 1), nullable=True)
+    fat_g: Mapped[Decimal | None] = mapped_column(Numeric(6, 1), nullable=True)
+    nutrition_is_estimated: Mapped[bool] = mapped_column(Boolean, default=False)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    visibility: Mapped[str] = mapped_column(String(16), default="private")
+    source: Mapped[str] = mapped_column(String(16), default="manual")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
