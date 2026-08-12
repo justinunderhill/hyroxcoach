@@ -35,9 +35,10 @@ export default async function DashboardPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">Log</p>
             <h2 className="mt-2 text-xl font-semibold text-[#15221b]">Meals & measurements</h2>
             <p className="mt-2 text-sm leading-6 text-stone-500">Track nutrition and bodyweight/waist trends.</p>
-            <div className="mt-5 flex gap-3">
+            <div className="mt-5 flex flex-wrap gap-3">
               <Link className="inline-flex min-h-11 items-center rounded-xl border border-stone-300 px-4 text-sm font-semibold text-stone-700" href="/meals">Log meal</Link>
               <Link className="inline-flex min-h-11 items-center rounded-xl border border-stone-300 px-4 text-sm font-semibold text-stone-700" href="/measurements">Log measurement</Link>
+              <Link className="inline-flex min-h-11 items-center rounded-xl border border-stone-300 px-4 text-sm font-semibold text-stone-700" href="/nutrition">Nutrition targets</Link>
             </div>
           </div>
         </section>

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
@@ -7,6 +7,7 @@ from sqlalchemy import (
     JSON,
     Boolean,
     CheckConstraint,
+    Date,
     DateTime,
     ForeignKey,
     Index,
@@ -247,4 +248,42 @@ class Meal(Base):
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class NutritionTarget(Base):
+    __tablename__ = "nutrition_targets"
+    __table_args__ = (
+        CheckConstraint(
+            "calories_target IS NOT NULL OR protein_g_target IS NOT NULL "
+            "OR carbs_g_target IS NOT NULL OR fat_g_target IS NOT NULL",
+            name="ck_nutrition_targets_value_present",
+        ),
+        CheckConstraint(
+            "calories_target IS NULL OR calories_target >= 0",
+            name="ck_nutrition_targets_calories_positive",
+        ),
+        CheckConstraint(
+            "protein_g_target IS NULL OR protein_g_target >= 0",
+            name="ck_nutrition_targets_protein_positive",
+        ),
+        CheckConstraint(
+            "carbs_g_target IS NULL OR carbs_g_target >= 0",
+            name="ck_nutrition_targets_carbs_positive",
+        ),
+        CheckConstraint(
+            "fat_g_target IS NULL OR fat_g_target >= 0", name="ck_nutrition_targets_fat_positive"
+        ),
+        Index("ix_nutrition_targets_user_effective", "user_id", "effective_from"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    user_id: Mapped[str] = mapped_column(String(255))
+    effective_from: Mapped[date] = mapped_column(Date)
+    calories_target: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    protein_g_target: Mapped[Decimal | None] = mapped_column(Numeric(6, 1), nullable=True)
+    carbs_g_target: Mapped[Decimal | None] = mapped_column(Numeric(6, 1), nullable=True)
+    fat_g_target: Mapped[Decimal | None] = mapped_column(Numeric(6, 1), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
     )

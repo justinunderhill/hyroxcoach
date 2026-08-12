@@ -10,6 +10,7 @@ from api.config import frontend_origins
 from api.routers.analytics import router as analytics_router
 from api.routers.meals import router as meals_router
 from api.routers.measurements import router as measurements_router
+from api.routers.nutrition import router as nutrition_router
 from api.routers.profiles import router as profiles_router
 from api.routers.workouts import router as workouts_router
 
@@ -39,6 +40,7 @@ app.include_router(workouts_router)
 app.include_router(analytics_router)
 app.include_router(meals_router)
 app.include_router(measurements_router)
+app.include_router(nutrition_router)
 
 
 def error_response(code: str, message: str, request_id: str) -> dict[str, dict[str, str]]:
