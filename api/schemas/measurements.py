@@ -30,6 +30,22 @@ class MeasurementCreate(BaseModel):
         return self
 
 
+class MeasurementUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    occurred_at: datetime | None = None
+    weight_kg: float | None = Field(default=None, gt=20, le=400)
+    waist_cm: float | None = Field(default=None, gt=30, le=250)
+    resting_hr: int | None = Field(default=None, gt=20, le=250)
+    notes: str | None = Field(default=None, max_length=500)
+    visibility: Visibility | None = None
+
+    @field_validator("notes")
+    @classmethod
+    def strip_text(cls, value: str | None) -> str | None:
+        return value.strip() if value is not None else None
+
+
 class MeasurementResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

@@ -87,6 +87,36 @@ def test_put_creates_then_updates_the_same_day_entry() -> None:
     assert list_response.json()["weekly_total"] == 9500
 
 
+def test_delete_removes_the_day_entry() -> None:
+    as_user(ATHLETE_A)
+    asyncio.run(api_request("PUT", f"/api/steps/{TODAY}", {"steps": 8000}))
+
+    delete_response = asyncio.run(api_request("DELETE", f"/api/steps/{TODAY}"))
+    assert delete_response.status_code == 204
+
+    list_response = asyncio.run(api_request("GET", "/api/steps"))
+    assert list_response.json()["entries"] == []
+
+
+def test_delete_requires_an_existing_entry() -> None:
+    as_user(ATHLETE_A)
+    delete_response = asyncio.run(api_request("DELETE", f"/api/steps/{TODAY}"))
+    assert delete_response.status_code == 404
+
+
+def test_delete_only_removes_the_caller_own_entry() -> None:
+    as_user(ATHLETE_A)
+    asyncio.run(api_request("PUT", f"/api/steps/{TODAY}", {"steps": 8000}))
+
+    as_user(ATHLETE_B)
+    delete_response = asyncio.run(api_request("DELETE", f"/api/steps/{TODAY}"))
+    assert delete_response.status_code == 404
+
+    as_user(ATHLETE_A)
+    list_response = asyncio.run(api_request("GET", "/api/steps"))
+    assert len(list_response.json()["entries"]) == 1
+
+
 def test_private_steps_are_not_visible_to_teammates() -> None:
     make_team(ATHLETE_A.id, extra_member_id=ATHLETE_B.id)
     as_user(ATHLETE_A)

@@ -99,6 +99,38 @@ def test_team_visible_measurement_appears_for_teammates() -> None:
     assert list_response.json()[0]["user_id"] == ATHLETE_A.id
 
 
+def test_owner_can_update_a_measurement() -> None:
+    as_user(ATHLETE_A)
+    create_response = asyncio.run(
+        api_request("POST", "/api/measurements", {"weight_kg": 82.4})
+    )
+    measurement_id = create_response.json()["id"]
+
+    update_response = asyncio.run(
+        api_request(
+            "PATCH", f"/api/measurements/{measurement_id}", {"weight_kg": 81.9, "notes": "fasted"}
+        )
+    )
+    assert update_response.status_code == 200
+    assert update_response.json()["weight_kg"] == "81.90"
+    assert update_response.json()["notes"] == "fasted"
+
+
+def test_only_owner_can_update_a_measurement() -> None:
+    make_team(ATHLETE_A.id, extra_member_id=ATHLETE_B.id)
+    as_user(ATHLETE_A)
+    create_response = asyncio.run(
+        api_request("POST", "/api/measurements", {"weight_kg": 82.4, "visibility": "team"})
+    )
+    measurement_id = create_response.json()["id"]
+
+    as_user(ATHLETE_B)
+    update_response = asyncio.run(
+        api_request("PATCH", f"/api/measurements/{measurement_id}", {"weight_kg": 70.0})
+    )
+    assert update_response.status_code == 404
+
+
 def test_only_owner_can_delete_a_measurement() -> None:
     make_team(ATHLETE_A.id, extra_member_id=ATHLETE_B.id)
     as_user(ATHLETE_A)

@@ -1,7 +1,7 @@
 from datetime import UTC, date, datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -40,6 +40,22 @@ def upsert_steps(
     session.commit()
     session.refresh(entry)
     return entry
+
+
+@router.delete("/{on_date}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_steps(
+    on_date: date,
+    user: CurrentUser,
+    session: DatabaseSession,
+) -> None:
+    set_request_user(session, user.id)
+    entry = session.scalar(
+        select(DailyStep).where(DailyStep.user_id == user.id, DailyStep.date == on_date)
+    )
+    if entry is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Steps entry not found.")
+    session.delete(entry)
+    session.commit()
 
 
 @router.get("", response_model=StepsHistoryResponse)
