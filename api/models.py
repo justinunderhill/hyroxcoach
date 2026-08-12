@@ -15,6 +15,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    UniqueConstraint,
     Uuid,
     func,
 )
@@ -286,4 +287,34 @@ class NutritionTarget(Base):
     fat_g_target: Mapped[Decimal | None] = mapped_column(Numeric(6, 1), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
+    )
+
+
+class DailyStep(Base):
+    __tablename__ = "daily_steps"
+    __table_args__ = (
+        CheckConstraint("steps >= 0", name="ck_daily_steps_steps_positive"),
+        CheckConstraint(
+            "source IN ('manual', 'health_connect', 'apple_health', 'other_import')",
+            name="ck_daily_steps_source",
+        ),
+        CheckConstraint("visibility IN ('team', 'private')", name="ck_daily_steps_visibility"),
+        Index("ix_daily_steps_user_date", "user_id", "date"),
+        UniqueConstraint("user_id", "date", name="uq_daily_steps_user_date"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    user_id: Mapped[str] = mapped_column(String(255))
+    date: Mapped[date] = mapped_column(Date)
+    steps: Mapped[int] = mapped_column(Integer)
+    source: Mapped[str] = mapped_column(String(20), default="manual")
+    visibility: Mapped[str] = mapped_column(String(16), default="private")
+    step_metadata: Mapped[dict[str, Any]] = mapped_column(
+        "metadata", JSON().with_variant(postgresql.JSONB, "postgresql"), default=dict
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )

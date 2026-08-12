@@ -39,6 +39,7 @@ export default async function DashboardPage() {
               <Link className="inline-flex min-h-11 items-center rounded-xl border border-stone-300 px-4 text-sm font-semibold text-stone-700" href="/meals">Log meal</Link>
               <Link className="inline-flex min-h-11 items-center rounded-xl border border-stone-300 px-4 text-sm font-semibold text-stone-700" href="/measurements">Log measurement</Link>
               <Link className="inline-flex min-h-11 items-center rounded-xl border border-stone-300 px-4 text-sm font-semibold text-stone-700" href="/nutrition">Nutrition targets</Link>
+              <Link className="inline-flex min-h-11 items-center rounded-xl border border-stone-300 px-4 text-sm font-semibold text-stone-700" href="/steps">Log steps</Link>
             </div>
           </div>
         </section>
