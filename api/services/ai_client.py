@@ -3,7 +3,7 @@ from functools import lru_cache
 
 from openai import OpenAI
 
-from api.config import extraction_model_name
+from api.config import coach_model_name, extraction_model_name
 
 
 @lru_cache
@@ -56,6 +56,29 @@ def call_vision_model(
             "type": "json_schema",
             "json_schema": {
                 "name": "extraction",
+                "schema": _strict_schema(json_schema),
+                "strict": True,
+            },
+        },
+    )
+    content = response.choices[0].message.content
+    if content is None:
+        raise ValueError("The model returned an empty response.")
+    return content
+
+
+def call_text_model(system_prompt: str, user_prompt: str, json_schema: dict) -> str:
+    """Calls the configured coaching model (text-only) and returns its raw JSON string."""
+    response = _client().chat.completions.create(
+        model=coach_model_name(),
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        response_format={
+            "type": "json_schema",
+            "json_schema": {
+                "name": "coach_insight",
                 "schema": _strict_schema(json_schema),
                 "strict": True,
             },

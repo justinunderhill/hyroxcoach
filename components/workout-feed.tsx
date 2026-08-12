@@ -2,6 +2,7 @@
 
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 
+import { WorkoutInsightButton } from "@/components/workout-insight-button";
 import { authenticatedFetch } from "@/lib/auth/client";
 import { listMedia, MediaItem } from "@/lib/media";
 
@@ -119,6 +120,7 @@ export const WorkoutFeed = forwardRef<WorkoutFeedHandle>(function WorkoutFeed(_p
               ))}
             </div>
           ) : null}
+          <WorkoutInsightButton workoutId={workout.id} />
         </li>
       ))}
     </ul>

@@ -23,19 +23,37 @@ Create or update editable profile fields for the verified token subject. Initial
 ## Teams
 
 ### POST `/api/teams`
-Create a team.
+Create a team. Not yet implemented — a solo team is auto-created on first `PATCH /api/me` instead (see Profiles).
 
 ### GET `/api/teams/{team_id}`
-Return team metadata if requester is a member.
+Return team metadata if requester is a member. Not yet implemented.
 
 ### POST `/api/teams/{team_id}/invites`
-Create partner invite.
+Create partner invite. Not yet implemented — there is currently no way to add a second athlete to a team via the app; team membership rows must be created directly.
 
 ### POST `/api/team-invites/{token}/accept`
-Accept invite.
+Accept invite. Not yet implemented.
 
 ### GET `/api/teams/{team_id}/dashboard`
-Return deterministic team dashboard DTO.
+Return deterministic team dashboard DTO. Not yet implemented — see `GET /api/analytics/team/{team_id}` for the closest existing equivalent.
+
+### GET `/api/teams/{team_id}/goal-event`
+Return the team's target event, or `null` if unset (same null-not-404 pattern as `GET /api/me`).
+
+### PUT `/api/teams/{team_id}/goal-event`
+Create or replace the team's single target event. Any active team member may set it.
+
+Body:
+```json
+{
+  "name": "HYROX Doubles London",
+  "event_date": "2026-11-01",
+  "division": "Open",
+  "location": "ExCeL London"
+}
+```
+
+Response adds a server-computed `days_until_event` (may be negative once the event has passed).
 
 ## Workouts
 
@@ -212,20 +230,39 @@ Returns:
 
 ## Coach
 
+All coach endpoints build a deterministic `CoachContext` (AI_COACH.md #3) from already-computed metrics, call the model with a structured-output schema, validate the result, and persist it as a `coach_insights` row before responding. A model or schema-validation failure returns `502` rather than a fabricated or partial insight.
+
+Response shape (all three endpoints):
+```json
+{
+  "id": "...",
+  "scope": "workout | weekly | team_weekly",
+  "user_id": "... | null",
+  "team_id": "...",
+  "period_start": "... | null",
+  "period_end": "... | null",
+  "source_record_id": "... | null",
+  "coach_version": "coach-v1",
+  "model_name": "gpt-4o-mini",
+  "insight": { "summary": "...", "status": "...", "wins": [], "gaps": [], "recommendations": [], "team_notes": [], "data_limits": [] },
+  "created_at": "..."
+}
+```
+
 ### GET `/api/coach/daily`
-Return current user's latest daily coach summary.
+Return current user's latest daily coach summary. Not yet implemented — Phase 7 covers workout/weekly/team_weekly scopes only.
 
 ### POST `/api/coach/workout/{workout_id}`
-Generate/re-generate workout-specific insight.
+Generate a workout-specific insight. Owner only. Always generates fresh (no caching) — this is an explicit user action.
 
 ### GET `/api/coach/weekly`
-Return weekly athlete review.
+Return the current user's weekly review for the trailing 7 days. Cached: if a `weekly` insight already exists for this exact period with an unchanged `context_hash`, it's returned without a new model call; otherwise a fresh one is generated and persisted.
 
 ### GET `/api/coach/team/{team_id}/weekly`
-Return team coaching review.
+Return the team's weekly review, same trailing-7-day window and caching behaviour as above. Requires active team membership. Only `visibility: "team"` workouts across all members are used — a caller's own private workouts are never included, since this insight has no single owner (`user_id: null`) and either teammate may read it later.
 
 ### POST `/api/coach/ask`
-Optional conversational coach endpoint.
+Optional conversational coach endpoint. Not yet implemented.
 
 Request should include a bounded question. Backend injects authorized context.
 

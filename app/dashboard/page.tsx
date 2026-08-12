@@ -2,9 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { ExerciseProgress } from "@/components/exercise-progress";
+import { GoalEventCard } from "@/components/goal-event-card";
 import { ProfileSummary } from "@/components/profile-summary";
 import { SignOutButton } from "@/components/sign-out-button";
 import { TeamComparison } from "@/components/team-comparison";
+import { TeamWeeklyReview } from "@/components/team-weekly-review";
+import { WeeklyReview } from "@/components/weekly-review";
 import { WeeklyStats } from "@/components/weekly-stats";
 import { WorkoutFeed } from "@/components/workout-feed";
 import { getServerAuth } from "@/lib/auth/server";
@@ -25,7 +28,10 @@ export default async function DashboardPage() {
           </div>
           <SignOutButton />
         </header>
-        <section className="mt-8 grid gap-5 md:grid-cols-3">
+        <section className="mt-8">
+          <GoalEventCard />
+        </section>
+        <section className="mt-6 grid gap-5 md:grid-cols-3">
           <ProfileSummary />
           <div className="rounded-3xl border border-[#dbe998] bg-[#f8ffe4] p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">Log</p>
@@ -52,6 +58,10 @@ export default async function DashboardPage() {
         <section className="mt-6 grid gap-5 md:grid-cols-2">
           <ExerciseProgress />
           <TeamComparison />
+        </section>
+        <section className="mt-6 grid gap-5 md:grid-cols-2">
+          <WeeklyReview />
+          <TeamWeeklyReview />
         </section>
         <section className="mt-8">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">Recent activity</p>

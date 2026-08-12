@@ -7,8 +7,14 @@ CLAUDE.md rule 2.
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Literal
+from uuid import UUID
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from api.models import ExercisePerformance, Workout, WorkoutCategory, WorkoutCategoryLink
 
 WEEK_DAYS = 7
 FIVE_K_MIN_KM = 4.9
@@ -328,3 +334,152 @@ def personal_bests(samples: list[ExercisePerformanceSample]) -> list[PersonalBes
 
     results.sort(key=lambda best: best.achieved_at, reverse=True)
     return results
+
+
+def _category_slugs_by_workout(
+    session: Session, workout_ids: list[UUID]
+) -> dict[str, list[str]]:
+    if not workout_ids:
+        return {}
+    category_rows = session.execute(
+        select(WorkoutCategoryLink.workout_id, WorkoutCategory.slug)
+        .join(WorkoutCategory, WorkoutCategory.id == WorkoutCategoryLink.category_id)
+        .where(WorkoutCategoryLink.workout_id.in_(workout_ids))
+    ).all()
+    grouped: dict[str, list[str]] = {}
+    for row in category_rows:
+        grouped.setdefault(str(row.workout_id), []).append(row.slug)
+    return grouped
+
+
+def _as_aware(occurred_at: datetime) -> datetime:
+    return occurred_at if occurred_at.tzinfo is not None else occurred_at.replace(tzinfo=UTC)
+
+
+def load_samples(session: Session, user_id: str, since: datetime) -> list[WorkoutSample]:
+    rows = session.execute(
+        select(Workout.id, Workout.occurred_at, Workout.distance_km, Workout.duration_minutes)
+        .where(Workout.user_id == user_id, Workout.occurred_at >= since)
+        .order_by(Workout.occurred_at.desc())
+    ).all()
+    categories_by_workout = _category_slugs_by_workout(session, [row.id for row in rows])
+
+    return [
+        WorkoutSample(
+            id=str(row.id),
+            occurred_at=_as_aware(row.occurred_at),
+            distance_km=float(row.distance_km) if row.distance_km is not None else None,
+            duration_minutes=row.duration_minutes,
+            category_slugs=tuple(categories_by_workout.get(str(row.id), [])),
+        )
+        for row in rows
+    ]
+
+
+def load_exercise_samples(
+    session: Session, user_ids: list[str], since: datetime
+) -> list[ExercisePerformanceSample]:
+    rows = session.execute(
+        select(
+            ExercisePerformance.id,
+            ExercisePerformance.exercise_name,
+            ExercisePerformance.normalized_exercise_key,
+            ExercisePerformance.load_kg,
+            ExercisePerformance.reps,
+            ExercisePerformance.duration_seconds,
+            ExercisePerformance.distance_m,
+            Workout.occurred_at,
+        )
+        .join(Workout, Workout.id == ExercisePerformance.workout_id)
+        .where(Workout.user_id.in_(user_ids), Workout.occurred_at >= since)
+    ).all()
+
+    return [
+        ExercisePerformanceSample(
+            id=str(row.id),
+            occurred_at=_as_aware(row.occurred_at),
+            exercise_key=(row.normalized_exercise_key or row.exercise_name).strip().lower(),
+            exercise_name=row.exercise_name,
+            load_kg=float(row.load_kg) if row.load_kg is not None else None,
+            reps=row.reps,
+            duration_seconds=row.duration_seconds,
+            distance_m=float(row.distance_m) if row.distance_m is not None else None,
+        )
+        for row in rows
+    ]
+
+
+def load_team_samples(
+    session: Session, team_id: UUID, requester_id: str, since: datetime
+) -> dict[str, list[WorkoutSample]]:
+    """Per-viewer team samples: the requester's own private workouts plus
+    everyone's team-visible ones. Suitable for a dashboard the requester is
+    looking at directly — NOT for content that might be persisted and read
+    by a teammate later (use load_team_visible_samples for that)."""
+    rows = session.execute(
+        select(
+            Workout.id,
+            Workout.user_id,
+            Workout.occurred_at,
+            Workout.distance_km,
+            Workout.duration_minutes,
+        )
+        .where(
+            Workout.team_id == team_id,
+            Workout.occurred_at >= since,
+            (Workout.user_id == requester_id) | (Workout.visibility == "team"),
+        )
+        .order_by(Workout.occurred_at.desc())
+    ).all()
+    categories_by_workout = _category_slugs_by_workout(session, [row.id for row in rows])
+
+    by_user: dict[str, list[WorkoutSample]] = {}
+    for row in rows:
+        by_user.setdefault(row.user_id, []).append(
+            WorkoutSample(
+                id=str(row.id),
+                occurred_at=_as_aware(row.occurred_at),
+                distance_km=float(row.distance_km) if row.distance_km is not None else None,
+                duration_minutes=row.duration_minutes,
+                category_slugs=tuple(categories_by_workout.get(str(row.id), [])),
+            )
+        )
+    return by_user
+
+
+def load_team_visible_samples(
+    session: Session, team_id: UUID, since: datetime
+) -> dict[str, list[WorkoutSample]]:
+    """Only visibility='team' workouts, for every member, regardless of
+    caller. Required for content persisted where any teammate might read it
+    later (e.g. a team_weekly coach insight) — never mix in one caller's own
+    private data there, or it would leak to the other athlete."""
+    rows = session.execute(
+        select(
+            Workout.id,
+            Workout.user_id,
+            Workout.occurred_at,
+            Workout.distance_km,
+            Workout.duration_minutes,
+        )
+        .where(
+            Workout.team_id == team_id,
+            Workout.occurred_at >= since,
+            Workout.visibility == "team",
+        )
+        .order_by(Workout.occurred_at.desc())
+    ).all()
+    categories_by_workout = _category_slugs_by_workout(session, [row.id for row in rows])
+
+    by_user: dict[str, list[WorkoutSample]] = {}
+    for row in rows:
+        by_user.setdefault(row.user_id, []).append(
+            WorkoutSample(
+                id=str(row.id),
+                occurred_at=_as_aware(row.occurred_at),
+                distance_km=float(row.distance_km) if row.distance_km is not None else None,
+                duration_minutes=row.duration_minutes,
+                category_slugs=tuple(categories_by_workout.get(str(row.id), [])),
+            )
+        )
+    return by_user

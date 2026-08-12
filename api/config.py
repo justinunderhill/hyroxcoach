@@ -13,9 +13,16 @@ MEDIA_DOWNLOAD_URL_TTL_SECONDS = 300
 DEFAULT_EXTRACTION_MODEL = "gpt-4o-mini"
 EXTRACTION_IMAGE_URL_TTL_SECONDS = 120
 
+DEFAULT_COACH_MODEL = "gpt-4o-mini"
+COACH_VERSION = "coach-v1"
+
 
 def extraction_model_name() -> str:
     return os.getenv("OPENAI_EXTRACTION_MODEL", DEFAULT_EXTRACTION_MODEL)
+
+
+def coach_model_name() -> str:
+    return os.getenv("OPENAI_COACH_MODEL", DEFAULT_COACH_MODEL)
 
 
 def frontend_origins() -> list[str]:

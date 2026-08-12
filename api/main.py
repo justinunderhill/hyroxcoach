@@ -9,12 +9,14 @@ from pydantic import BaseModel
 from api.config import frontend_origins
 from api.routers.analytics import router as analytics_router
 from api.routers.cindy import router as cindy_router
+from api.routers.coach import router as coach_router
 from api.routers.meals import router as meals_router
 from api.routers.measurements import router as measurements_router
 from api.routers.media import router as media_router
 from api.routers.nutrition import router as nutrition_router
 from api.routers.profiles import router as profiles_router
 from api.routers.steps import router as steps_router
+from api.routers.teams import router as teams_router
 from api.routers.workouts import router as workouts_router
 
 
@@ -47,6 +49,8 @@ app.include_router(media_router)
 app.include_router(nutrition_router)
 app.include_router(steps_router)
 app.include_router(cindy_router)
+app.include_router(teams_router)
+app.include_router(coach_router)
 
 
 def error_response(code: str, message: str, request_id: str) -> dict[str, dict[str, str]]:

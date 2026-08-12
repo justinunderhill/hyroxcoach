@@ -8,14 +8,7 @@ from sqlalchemy.orm import Session
 
 from api.auth import AuthenticatedUser, get_current_user
 from api.database import get_session, set_request_user
-from api.models import (
-    AthleteProfile,
-    ExercisePerformance,
-    TeamMembership,
-    Workout,
-    WorkoutCategory,
-    WorkoutCategoryLink,
-)
+from api.models import AthleteProfile, TeamMembership, WorkoutCategory
 from api.schemas.analytics import (
     AthleteAnalyticsResponse,
     ConsistencyResponse,
@@ -28,12 +21,14 @@ from api.schemas.analytics import (
     TeamAthleteSummary,
 )
 from api.services.analytics import (
-    ExercisePerformanceSample,
     ExerciseProgression,
     WorkoutSample,
     active_days_in_window,
     category_coverage,
     exercise_progression,
+    load_exercise_samples,
+    load_samples,
+    load_team_samples,
     personal_bests,
     running_summary,
     sessions_in_window,
@@ -47,76 +42,6 @@ DatabaseSession = Annotated[Session, Depends(get_session)]
 
 DEFAULT_RANGE_DAYS = 28
 MIN_SAMPLES_FOR_TRENDS = 2
-
-
-def load_samples(session: Session, user_id: str, since: datetime) -> list[WorkoutSample]:
-    rows = session.execute(
-        select(Workout.id, Workout.occurred_at, Workout.distance_km, Workout.duration_minutes)
-        .where(Workout.user_id == user_id, Workout.occurred_at >= since)
-        .order_by(Workout.occurred_at.desc())
-    ).all()
-    workout_ids = [str(row.id) for row in rows]
-
-    category_rows = session.execute(
-        select(WorkoutCategoryLink.workout_id, WorkoutCategory.slug)
-        .join(WorkoutCategory, WorkoutCategory.id == WorkoutCategoryLink.category_id)
-        .where(WorkoutCategoryLink.workout_id.in_([row.id for row in rows]))
-    ).all()
-    categories_by_workout: dict[str, list[str]] = {workout_id: [] for workout_id in workout_ids}
-    for category_row in category_rows:
-        categories_by_workout[str(category_row.workout_id)].append(category_row.slug)
-
-    return [
-        WorkoutSample(
-            id=str(row.id),
-            occurred_at=(
-                row.occurred_at
-                if row.occurred_at.tzinfo is not None
-                else row.occurred_at.replace(tzinfo=UTC)
-            ),
-            distance_km=float(row.distance_km) if row.distance_km is not None else None,
-            duration_minutes=row.duration_minutes,
-            category_slugs=tuple(categories_by_workout.get(str(row.id), [])),
-        )
-        for row in rows
-    ]
-
-
-def load_exercise_samples(
-    session: Session, user_ids: list[str], since: datetime
-) -> list[ExercisePerformanceSample]:
-    rows = session.execute(
-        select(
-            ExercisePerformance.id,
-            ExercisePerformance.exercise_name,
-            ExercisePerformance.normalized_exercise_key,
-            ExercisePerformance.load_kg,
-            ExercisePerformance.reps,
-            ExercisePerformance.duration_seconds,
-            ExercisePerformance.distance_m,
-            Workout.occurred_at,
-        )
-        .join(Workout, Workout.id == ExercisePerformance.workout_id)
-        .where(Workout.user_id.in_(user_ids), Workout.occurred_at >= since)
-    ).all()
-
-    return [
-        ExercisePerformanceSample(
-            id=str(row.id),
-            occurred_at=(
-                row.occurred_at
-                if row.occurred_at.tzinfo is not None
-                else row.occurred_at.replace(tzinfo=UTC)
-            ),
-            exercise_key=(row.normalized_exercise_key or row.exercise_name).strip().lower(),
-            exercise_name=row.exercise_name,
-            load_kg=float(row.load_kg) if row.load_kg is not None else None,
-            reps=row.reps,
-            duration_seconds=row.duration_seconds,
-            distance_m=float(row.distance_m) if row.distance_m is not None else None,
-        )
-        for row in rows
-    ]
 
 
 def progression_response(
@@ -213,57 +138,6 @@ def get_my_analytics(
         ],
         data_note=data_note,
     )
-
-
-def load_team_samples(
-    session: Session, team_id: UUID, requester_id: str, since: datetime
-) -> dict[str, list[WorkoutSample]]:
-    rows = session.execute(
-        select(
-            Workout.id,
-            Workout.user_id,
-            Workout.occurred_at,
-            Workout.distance_km,
-            Workout.duration_minutes,
-        )
-        .where(
-            Workout.team_id == team_id,
-            Workout.occurred_at >= since,
-            (Workout.user_id == requester_id) | (Workout.visibility == "team"),
-        )
-        .order_by(Workout.occurred_at.desc())
-    ).all()
-    workout_ids = [row.id for row in rows]
-
-    category_rows = (
-        session.execute(
-            select(WorkoutCategoryLink.workout_id, WorkoutCategory.slug)
-            .join(WorkoutCategory, WorkoutCategory.id == WorkoutCategoryLink.category_id)
-            .where(WorkoutCategoryLink.workout_id.in_(workout_ids))
-        ).all()
-        if workout_ids
-        else []
-    )
-    categories_by_workout: dict[str, list[str]] = {}
-    for category_row in category_rows:
-        categories_by_workout.setdefault(str(category_row.workout_id), []).append(category_row.slug)
-
-    by_user: dict[str, list[WorkoutSample]] = {}
-    for row in rows:
-        by_user.setdefault(row.user_id, []).append(
-            WorkoutSample(
-                id=str(row.id),
-                occurred_at=(
-                    row.occurred_at
-                    if row.occurred_at.tzinfo is not None
-                    else row.occurred_at.replace(tzinfo=UTC)
-                ),
-                distance_km=float(row.distance_km) if row.distance_km is not None else None,
-                duration_minutes=row.duration_minutes,
-                category_slugs=tuple(categories_by_workout.get(str(row.id), [])),
-            )
-        )
-    return by_user
 
 
 @router.get("/team/{team_id}", response_model=TeamAnalyticsResponse)

@@ -127,6 +127,32 @@ class TeamMembership(Base):
     )
 
 
+class GoalEvent(Base):
+    __tablename__ = "goal_events"
+    __table_args__ = (
+        CheckConstraint("event_type IN ('hyrox_doubles')", name="ck_goal_events_event_type"),
+        UniqueConstraint("team_id", name="uq_goal_events_team_id"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    team_id: Mapped[UUID] = mapped_column(Uuid, ForeignKey("teams.id", ondelete="CASCADE"))
+    name: Mapped[str] = mapped_column(String(120))
+    event_type: Mapped[str] = mapped_column(String(24), default="hyrox_doubles")
+    event_date: Mapped[date] = mapped_column(Date)
+    division: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    location: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    preparation_start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    event_metadata: Mapped[dict[str, Any]] = mapped_column(
+        "metadata", JSON().with_variant(postgresql.JSONB, "postgresql"), default=dict
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
 class WorkoutCategory(Base):
     __tablename__ = "workout_categories"
 
@@ -444,6 +470,33 @@ class CindyResult(Base):
     calories_burned: Mapped[int | None] = mapped_column(Integer, nullable=True)
     calorie_source: Mapped[str | None] = mapped_column(String(16), nullable=True)
     calorie_estimation_version: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
+class CoachInsight(Base):
+    __tablename__ = "coach_insights"
+    __table_args__ = (
+        CheckConstraint(
+            "scope IN ('workout', 'daily', 'weekly', 'team_weekly')", name="ck_coach_insights_scope"
+        ),
+        Index("ix_coach_insights_lookup", "scope", "team_id", "user_id", "period_start"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    scope: Mapped[str] = mapped_column(String(16))
+    user_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    team_id: Mapped[UUID] = mapped_column(Uuid, ForeignKey("teams.id", ondelete="CASCADE"))
+    period_start: Mapped[date | None] = mapped_column(Date, nullable=True)
+    period_end: Mapped[date | None] = mapped_column(Date, nullable=True)
+    source_record_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
+    coach_version: Mapped[str] = mapped_column(String(24))
+    model_name: Mapped[str] = mapped_column(String(80))
+    insight_json: Mapped[dict[str, Any]] = mapped_column(
+        JSON().with_variant(postgresql.JSONB, "postgresql")
+    )
+    context_hash: Mapped[str] = mapped_column(String(64))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
