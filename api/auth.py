@@ -32,6 +32,10 @@ def decode_access_token(token: str) -> dict[str, Any]:
         token,
         signing_key.key,
         algorithms=["EdDSA"],
+        # Small leeway absorbs ordinary clock skew between this host and the
+        # token issuer; without it, iat/exp checks intermittently reject
+        # freshly issued tokens as "not yet valid".
+        leeway=10,
         options={"verify_aud": False, "require": ["sub", "exp"]},
     )
 
