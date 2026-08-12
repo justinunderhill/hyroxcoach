@@ -180,16 +180,78 @@ export function CindyTimer({ onCompleted }: CindyTimerProps) {
             >
               + ROUND ({fullRounds})
             </button>
+            <button
+              className="min-h-11 w-full max-w-xs rounded-xl border border-stone-200 bg-[#fafaf7] text-xs font-semibold text-stone-700 disabled:opacity-50"
+              disabled={phase === "idle" || fullRounds === 0}
+              onClick={() => setFullRounds((value) => Math.max(0, value - 1))}
+              type="button"
+            >
+              − Round
+            </button>
             <div className="grid w-full max-w-xs grid-cols-3 gap-2">
-              <button className="min-h-11 rounded-xl border border-stone-200 bg-[#fafaf7] text-xs font-semibold text-stone-700 disabled:opacity-50" disabled={phase === "idle"} onClick={() => setExtraPullups((v) => v + 1)} type="button">
-                Pull-ups +1 ({extraPullups})
-              </button>
-              <button className="min-h-11 rounded-xl border border-stone-200 bg-[#fafaf7] text-xs font-semibold text-stone-700 disabled:opacity-50" disabled={phase === "idle"} onClick={() => setExtraPushups((v) => v + 1)} type="button">
-                Push-ups +1 ({extraPushups})
-              </button>
-              <button className="min-h-11 rounded-xl border border-stone-200 bg-[#fafaf7] text-xs font-semibold text-stone-700 disabled:opacity-50" disabled={phase === "idle"} onClick={() => setExtraSquats((v) => v + 1)} type="button">
-                Squats +1 ({extraSquats})
-              </button>
+              <div className="flex min-h-11 items-center justify-between rounded-xl border border-stone-200 bg-[#fafaf7] px-2 text-xs font-semibold text-stone-700">
+                <button
+                  aria-label="Decrease pull-ups"
+                  className="min-h-8 min-w-8 rounded-lg text-stone-500 disabled:opacity-30"
+                  disabled={phase === "idle" || extraPullups === 0}
+                  onClick={() => setExtraPullups((v) => Math.max(0, v - 1))}
+                  type="button"
+                >
+                  −
+                </button>
+                <span className="px-1 text-center">Pull-ups ({extraPullups})</span>
+                <button
+                  aria-label="Increase pull-ups"
+                  className="min-h-8 min-w-8 rounded-lg text-stone-500 disabled:opacity-30"
+                  disabled={phase === "idle"}
+                  onClick={() => setExtraPullups((v) => v + 1)}
+                  type="button"
+                >
+                  +
+                </button>
+              </div>
+              <div className="flex min-h-11 items-center justify-between rounded-xl border border-stone-200 bg-[#fafaf7] px-2 text-xs font-semibold text-stone-700">
+                <button
+                  aria-label="Decrease push-ups"
+                  className="min-h-8 min-w-8 rounded-lg text-stone-500 disabled:opacity-30"
+                  disabled={phase === "idle" || extraPushups === 0}
+                  onClick={() => setExtraPushups((v) => Math.max(0, v - 1))}
+                  type="button"
+                >
+                  −
+                </button>
+                <span className="px-1 text-center">Push-ups ({extraPushups})</span>
+                <button
+                  aria-label="Increase push-ups"
+                  className="min-h-8 min-w-8 rounded-lg text-stone-500 disabled:opacity-30"
+                  disabled={phase === "idle"}
+                  onClick={() => setExtraPushups((v) => v + 1)}
+                  type="button"
+                >
+                  +
+                </button>
+              </div>
+              <div className="flex min-h-11 items-center justify-between rounded-xl border border-stone-200 bg-[#fafaf7] px-2 text-xs font-semibold text-stone-700">
+                <button
+                  aria-label="Decrease squats"
+                  className="min-h-8 min-w-8 rounded-lg text-stone-500 disabled:opacity-30"
+                  disabled={phase === "idle" || extraSquats === 0}
+                  onClick={() => setExtraSquats((v) => Math.max(0, v - 1))}
+                  type="button"
+                >
+                  −
+                </button>
+                <span className="px-1 text-center">Squats ({extraSquats})</span>
+                <button
+                  aria-label="Increase squats"
+                  className="min-h-8 min-w-8 rounded-lg text-stone-500 disabled:opacity-30"
+                  disabled={phase === "idle"}
+                  onClick={() => setExtraSquats((v) => v + 1)}
+                  type="button"
+                >
+                  +
+                </button>
+              </div>
             </div>
           </div>
         </>

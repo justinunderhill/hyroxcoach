@@ -3,7 +3,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 
 import { WorkoutInsightButton } from "@/components/workout-insight-button";
-import { authenticatedFetch } from "@/lib/auth/client";
+import { authClient, authenticatedFetch } from "@/lib/auth/client";
 import { listMedia, MediaItem } from "@/lib/media";
 
 type Workout = {
@@ -16,6 +16,7 @@ type Workout = {
   duration_minutes: number | null;
   distance_km: string | null;
   rpe: number | null;
+  notes: string | null;
   visibility: "team" | "private";
 };
 
@@ -36,9 +37,183 @@ function formatMeta(workout: Workout): string {
   return parts.join(" · ");
 }
 
+function toDatetimeLocal(isoString: string): string {
+  const date = new Date(isoString);
+  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+  return date.toISOString().slice(0, 16);
+}
+
+type EditWorkoutFormProps = {
+  workout: Workout;
+  onCancel: () => void;
+  onSaved: () => void;
+};
+
+function EditWorkoutForm({ workout, onCancel, onSaved }: EditWorkoutFormProps) {
+  const [title, setTitle] = useState(workout.title);
+  const [activityType, setActivityType] = useState(workout.activity_type);
+  const [occurredAt, setOccurredAt] = useState(toDatetimeLocal(workout.occurred_at));
+  const [durationMinutes, setDurationMinutes] = useState(workout.duration_minutes?.toString() ?? "");
+  const [distanceKm, setDistanceKm] = useState(workout.distance_km ?? "");
+  const [rpe, setRpe] = useState(workout.rpe?.toString() ?? "");
+  const [notes, setNotes] = useState(workout.notes ?? "");
+  const [visibility, setVisibility] = useState(workout.visibility);
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  async function handleSave() {
+    setError(null);
+    setIsSaving(true);
+    try {
+      const response = await authenticatedFetch(`/api/workouts/${workout.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: title.trim(),
+          activity_type: activityType.trim(),
+          occurred_at: new Date(occurredAt).toISOString(),
+          duration_minutes: durationMinutes ? Number(durationMinutes) : null,
+          distance_km: distanceKm ? Number(distanceKm) : null,
+          rpe: rpe ? Number(rpe) : null,
+          notes: notes.trim() || null,
+          visibility,
+        }),
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        const message = body?.error?.message;
+        throw new Error(typeof message === "string" ? message : "This workout could not be updated.");
+      }
+      onSaved();
+    } catch (submissionError) {
+      setError(
+        submissionError instanceof Error ? submissionError.message : "This workout could not be updated.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-[#fafaf7] p-3">
+      <label className="block text-xs font-semibold text-stone-600">
+        Title
+        <input
+          className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+          onChange={(event) => setTitle(event.target.value)}
+          value={title}
+        />
+      </label>
+      <div className="grid grid-cols-2 gap-3">
+        <label className="block text-xs font-semibold text-stone-600">
+          Activity type
+          <input
+            className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+            onChange={(event) => setActivityType(event.target.value)}
+            value={activityType}
+          />
+        </label>
+        <label className="block text-xs font-semibold text-stone-600">
+          When
+          <input
+            className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+            onChange={(event) => setOccurredAt(event.target.value)}
+            type="datetime-local"
+            value={occurredAt}
+          />
+        </label>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <label className="block text-xs font-semibold text-stone-600">
+          Minutes
+          <input
+            className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+            onChange={(event) => setDurationMinutes(event.target.value)}
+            type="number"
+            value={durationMinutes}
+          />
+        </label>
+        <label className="block text-xs font-semibold text-stone-600">
+          Distance, km
+          <input
+            className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+            onChange={(event) => setDistanceKm(event.target.value)}
+            step="0.01"
+            type="number"
+            value={distanceKm}
+          />
+        </label>
+        <label className="block text-xs font-semibold text-stone-600">
+          RPE
+          <input
+            className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+            max={10}
+            min={1}
+            onChange={(event) => setRpe(event.target.value)}
+            type="number"
+            value={rpe}
+          />
+        </label>
+      </div>
+      <label className="block text-xs font-semibold text-stone-600">
+        Notes
+        <textarea
+          className="mt-1 min-h-16 w-full rounded-xl border border-stone-300 px-3 py-2 text-sm"
+          onChange={(event) => setNotes(event.target.value)}
+          value={notes}
+        />
+      </label>
+      <fieldset>
+        <legend className="text-xs font-semibold text-stone-600">Visibility</legend>
+        <div className="mt-1 flex gap-3">
+          <label className="flex items-center gap-1.5 text-xs text-stone-700">
+            <input
+              checked={visibility === "team"}
+              onChange={() => setVisibility("team")}
+              type="radio"
+            />
+            Team
+          </label>
+          <label className="flex items-center gap-1.5 text-xs text-stone-700">
+            <input
+              checked={visibility === "private"}
+              onChange={() => setVisibility("private")}
+              type="radio"
+            />
+            Private
+          </label>
+        </div>
+      </fieldset>
+      {error ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-800">{error}</p> : null}
+      <div className="flex gap-2">
+        <button
+          className="min-h-10 flex-1 rounded-xl bg-[#15271e] text-xs font-bold text-white disabled:cursor-wait disabled:opacity-60"
+          disabled={isSaving}
+          onClick={handleSave}
+          type="button"
+        >
+          {isSaving ? "Saving…" : "Save changes"}
+        </button>
+        <button
+          className="min-h-10 rounded-xl border border-stone-300 px-4 text-xs font-semibold text-stone-700"
+          disabled={isSaving}
+          onClick={onCancel}
+          type="button"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export const WorkoutFeed = forwardRef<WorkoutFeedHandle>(function WorkoutFeed(_props, ref) {
+  const { data: session } = authClient.useSession();
   const [state, setState] = useState<FeedState>({ status: "loading" });
   const [reloadToken, setReloadToken] = useState(0);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteErrorId, setDeleteErrorId] = useState<string | null>(null);
 
   useImperativeHandle(ref, () => ({
     refresh: () => setReloadToken((token) => token + 1),
@@ -46,7 +221,6 @@ export const WorkoutFeed = forwardRef<WorkoutFeedHandle>(function WorkoutFeed(_p
 
   useEffect(() => {
     const controller = new AbortController();
-    setState({ status: "loading" });
     void authenticatedFetch("/api/workouts?limit=20", { signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) throw new Error();
@@ -71,6 +245,23 @@ export const WorkoutFeed = forwardRef<WorkoutFeedHandle>(function WorkoutFeed(_p
     return () => controller.abort();
   }, [reloadToken]);
 
+  async function handleDelete(workoutId: string) {
+    if (!window.confirm("Delete this workout? This cannot be undone.")) return;
+    setDeleteErrorId(null);
+    setDeletingId(workoutId);
+    try {
+      const response = await authenticatedFetch(`/api/workouts/${workoutId}`, { method: "DELETE" });
+      if (!response.ok && response.status !== 204) {
+        throw new Error("This workout could not be deleted.");
+      }
+      setReloadToken((token) => token + 1);
+    } catch {
+      setDeleteErrorId(workoutId);
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   if (state.status === "loading") return <div className="h-40 animate-pulse rounded-3xl bg-stone-100" />;
   if (state.status === "error") {
     return <p className="rounded-3xl bg-rose-50 p-6 text-sm text-rose-800">Recent activity could not be loaded.</p>;
@@ -83,46 +274,86 @@ export const WorkoutFeed = forwardRef<WorkoutFeedHandle>(function WorkoutFeed(_p
     );
   }
 
+  const currentUserId = session?.user?.id;
+
   return (
     <ul className="space-y-3">
-      {state.workouts.map((workout) => (
-        <li className="rounded-2xl border border-stone-200 bg-white p-4" key={workout.id}>
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="font-semibold text-[#15221b]">{workout.title}</p>
-              <p className="mt-0.5 text-xs text-stone-500">
-                {new Date(workout.occurred_at).toLocaleString(undefined, {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                })}
+      {state.workouts.map((workout) => {
+        const isOwner = currentUserId !== undefined && workout.user_id === currentUserId;
+        const isEditing = editingId === workout.id;
+        return (
+          <li className="rounded-2xl border border-stone-200 bg-white p-4" key={workout.id}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="font-semibold text-[#15221b]">{workout.title}</p>
+                <p className="mt-0.5 text-xs text-stone-500">
+                  {new Date(workout.occurred_at).toLocaleString(undefined, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                </p>
+              </div>
+              <span className="shrink-0 rounded-full bg-[#f8ffe4] px-2.5 py-1 text-xs font-semibold text-[#567118]">
+                {workout.visibility === "team" ? "Team" : "Private"}
+              </span>
+            </div>
+            {formatMeta(workout) ? <p className="mt-2 text-sm text-stone-600">{formatMeta(workout)}</p> : null}
+            {workout.category_slugs.length > 0 ? (
+              <p className="mt-2 text-xs uppercase tracking-[0.1em] text-stone-400">
+                {workout.category_slugs.join(", ")}
               </p>
+            ) : null}
+            {(state.mediaByWorkoutId.get(workout.id) ?? []).length > 0 ? (
+              <div className="mt-3 flex gap-2">
+                {(state.mediaByWorkoutId.get(workout.id) ?? []).map((item) => (
+                  <a href={item.view_url} key={item.media_asset.id} rel="noreferrer" target="_blank">
+                    <img
+                      alt="Workout evidence"
+                      className="size-16 rounded-xl border border-stone-200 object-cover"
+                      src={item.view_url}
+                    />
+                  </a>
+                ))}
+              </div>
+            ) : null}
+            {isOwner && isEditing ? (
+              <EditWorkoutForm
+                onCancel={() => setEditingId(null)}
+                onSaved={() => {
+                  setEditingId(null);
+                  setReloadToken((token) => token + 1);
+                }}
+                workout={workout}
+              />
+            ) : null}
+            <div className="mt-3 flex items-center gap-3">
+              <WorkoutInsightButton workoutId={workout.id} />
+              {isOwner && !isEditing ? (
+                <>
+                  <button
+                    className="text-xs font-semibold text-[#506b13] underline decoration-[#a4c72b] underline-offset-4"
+                    onClick={() => setEditingId(workout.id)}
+                    type="button"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="text-xs font-semibold text-rose-700 underline decoration-rose-300 underline-offset-4 disabled:opacity-50"
+                    disabled={deletingId === workout.id}
+                    onClick={() => handleDelete(workout.id)}
+                    type="button"
+                  >
+                    {deletingId === workout.id ? "Deleting…" : "Delete"}
+                  </button>
+                </>
+              ) : null}
             </div>
-            <span className="shrink-0 rounded-full bg-[#f8ffe4] px-2.5 py-1 text-xs font-semibold text-[#567118]">
-              {workout.visibility === "team" ? "Team" : "Private"}
-            </span>
-          </div>
-          {formatMeta(workout) ? <p className="mt-2 text-sm text-stone-600">{formatMeta(workout)}</p> : null}
-          {workout.category_slugs.length > 0 ? (
-            <p className="mt-2 text-xs uppercase tracking-[0.1em] text-stone-400">
-              {workout.category_slugs.join(", ")}
-            </p>
-          ) : null}
-          {(state.mediaByWorkoutId.get(workout.id) ?? []).length > 0 ? (
-            <div className="mt-3 flex gap-2">
-              {(state.mediaByWorkoutId.get(workout.id) ?? []).map((item) => (
-                <a href={item.view_url} key={item.media_asset.id} rel="noreferrer" target="_blank">
-                  <img
-                    alt="Workout evidence"
-                    className="size-16 rounded-xl border border-stone-200 object-cover"
-                    src={item.view_url}
-                  />
-                </a>
-              ))}
-            </div>
-          ) : null}
-          <WorkoutInsightButton workoutId={workout.id} />
-        </li>
-      ))}
+            {deleteErrorId === workout.id ? (
+              <p className="mt-2 text-xs text-rose-700">This workout could not be deleted.</p>
+            ) : null}
+          </li>
+        );
+      })}
     </ul>
   );
 });
