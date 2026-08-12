@@ -61,6 +61,7 @@ class WorkoutCreate(BaseModel):
     distance_km: float | None = Field(default=None, gt=0, le=1_000)
     rpe: int | None = Field(default=None, ge=1, le=10)
     visibility: Visibility = "private"
+    source: Source = "manual"
     notes: str | None = Field(default=None, max_length=2_000)
 
     @field_validator("title", "activity_type", "notes")

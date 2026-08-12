@@ -53,6 +53,7 @@ def create_meal(
         nutrition_is_estimated=payload.nutrition_is_estimated,
         notes=payload.notes,
         visibility=payload.visibility,
+        source=payload.source,
     )
     session.add(meal)
     session.commit()

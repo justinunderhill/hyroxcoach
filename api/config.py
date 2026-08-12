@@ -10,6 +10,13 @@ MEDIA_MAX_SIZE_BYTES = 15 * 1024 * 1024
 MEDIA_UPLOAD_URL_TTL_SECONDS = 300
 MEDIA_DOWNLOAD_URL_TTL_SECONDS = 300
 
+DEFAULT_EXTRACTION_MODEL = "gpt-4o-mini"
+EXTRACTION_IMAGE_URL_TTL_SECONDS = 120
+
+
+def extraction_model_name() -> str:
+    return os.getenv("OPENAI_EXTRACTION_MODEL", DEFAULT_EXTRACTION_MODEL)
+
 
 def frontend_origins() -> list[str]:
     configured = os.getenv("FRONTEND_ORIGINS", "http://localhost:3000")

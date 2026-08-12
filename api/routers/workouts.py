@@ -162,6 +162,7 @@ def create_workout(
         rpe=payload.rpe,
         notes=payload.notes,
         visibility=payload.visibility,
+        source=payload.source,
     )
     session.add(workout)
     session.flush()

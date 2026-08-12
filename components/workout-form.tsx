@@ -3,7 +3,8 @@
 import { FormEvent, useRef, useState } from "react";
 
 import { authenticatedFetch } from "@/lib/auth/client";
-import { uploadMedia } from "@/lib/media";
+import { confirmExtraction, linkMedia } from "@/lib/media";
+import { ScreenshotImport } from "@/components/screenshot-import";
 
 const categories = [
   { slug: "running", label: "Running" },
@@ -29,6 +30,19 @@ function nowForDatetimeLocal(): string {
   return now.toISOString().slice(0, 16);
 }
 
+function summarizeWorkoutExtraction(data: Record<string, unknown>): string {
+  const parts: string[] = [];
+  if (typeof data.event_name === "string" && data.event_name) parts.push(data.event_name);
+  if (typeof data.distance_km === "number") parts.push(`${data.distance_km} km`);
+  if (typeof data.duration_seconds === "number") {
+    const minutes = Math.floor(data.duration_seconds / 60);
+    const seconds = Math.round(data.duration_seconds % 60);
+    parts.push(`${minutes}:${String(seconds).padStart(2, "0")}`);
+  }
+  if (typeof data.occurred_at === "string" && data.occurred_at) parts.push(data.occurred_at);
+  return parts.length > 0 ? parts.join(" · ") : "No details detected in the photo.";
+}
+
 type WorkoutFormProps = {
   onLogged: () => void;
 };
@@ -36,7 +50,34 @@ type WorkoutFormProps = {
 export function WorkoutForm({ onLogged }: WorkoutFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const evidenceInputRef = useRef<HTMLInputElement>(null);
+  const titleRef = useRef<HTMLInputElement>(null);
+  const distanceRef = useRef<HTMLInputElement>(null);
+  const durationRef = useRef<HTMLInputElement>(null);
+  const occurredAtRef = useRef<HTMLInputElement>(null);
+  const pendingMediaId = useRef<string | null>(null);
+  const pendingExtractionResultId = useRef<string | null>(null);
+
+  function handleMediaUploaded(mediaAssetId: string) {
+    pendingMediaId.current = mediaAssetId;
+  }
+
+  function handleApplyExtraction(data: Record<string, unknown>, extractionResultId: string) {
+    if (typeof data.event_name === "string" && data.event_name && titleRef.current) {
+      titleRef.current.value = data.event_name;
+    }
+    if (typeof data.distance_km === "number" && distanceRef.current) {
+      distanceRef.current.value = String(data.distance_km);
+    }
+    if (typeof data.duration_seconds === "number" && durationRef.current) {
+      durationRef.current.value = String(Math.round(data.duration_seconds / 60));
+    }
+    if (typeof data.occurred_at === "string" && data.occurred_at && occurredAtRef.current) {
+      const existing = occurredAtRef.current.value;
+      const existingTime = existing.includes("T") ? existing.split("T")[1] : "12:00";
+      occurredAtRef.current.value = `${data.occurred_at}T${existingTime}`;
+    }
+    pendingExtractionResultId.current = extractionResultId;
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -45,12 +86,12 @@ export function WorkoutForm({ onLogged }: WorkoutFormProps) {
 
     const form = event.currentTarget;
     const data = new FormData(form);
-    const evidencePhoto = evidenceInputRef.current?.files?.[0] ?? null;
     const selectedCategories = categories
       .map((category) => category.slug)
       .filter((slug) => data.get(slug) === "on");
 
     const occurredAtLocal = String(data.get("occurredAt") ?? "");
+    const usedExtraction = pendingExtractionResultId.current !== null;
     const payload = {
       occurred_at: occurredAtLocal ? new Date(occurredAtLocal).toISOString() : new Date().toISOString(),
       title: String(data.get("title") ?? "").trim(),
@@ -60,6 +101,7 @@ export function WorkoutForm({ onLogged }: WorkoutFormProps) {
       distance_km: data.get("distanceKm") ? Number(data.get("distanceKm")) : null,
       rpe: data.get("rpe") ? Number(data.get("rpe")) : null,
       visibility: String(data.get("visibility") ?? "team"),
+      source: usedExtraction ? "image" : "manual",
       notes: String(data.get("notes") ?? "").trim() || null,
     };
 
@@ -76,19 +118,21 @@ export function WorkoutForm({ onLogged }: WorkoutFormProps) {
         throw new Error(typeof message === "string" ? message : "Your workout could not be saved.");
       }
 
-      if (evidencePhoto) {
-        const workout: { id: string } = await response.json();
+      const workout: { id: string } = await response.json();
+      const mediaId = pendingMediaId.current;
+      if (mediaId) {
         try {
-          await uploadMedia(evidencePhoto, {
-            purpose: "workout_evidence",
-            entityType: "workout",
-            entityId: workout.id,
-          });
+          await linkMedia(mediaId, "workout", workout.id);
+          if (pendingExtractionResultId.current) {
+            await confirmExtraction(mediaId, pendingExtractionResultId.current, payload);
+          }
         } catch {
-          setError("Workout saved, but the photo could not be uploaded.");
+          setError("Workout saved, but the photo could not be attached.");
         }
       }
 
+      pendingMediaId.current = null;
+      pendingExtractionResultId.current = null;
       form.reset();
       onLogged();
     } catch (submissionError) {
@@ -104,6 +148,15 @@ export function WorkoutForm({ onLogged }: WorkoutFormProps) {
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
+      <ScreenshotImport
+        extractionType="workout"
+        label="Import from a screenshot (Parkrun, GPS watch, race timer)"
+        onApply={handleApplyExtraction}
+        onMediaUploaded={handleMediaUploaded}
+        purpose="workout_evidence"
+        summarize={summarizeWorkoutExtraction}
+      />
+
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block text-sm font-semibold text-stone-700 sm:col-span-2">
           Title
@@ -112,6 +165,7 @@ export function WorkoutForm({ onLogged }: WorkoutFormProps) {
             maxLength={120}
             name="title"
             placeholder="Parkrun, MMA sparring, Rings strength…"
+            ref={titleRef}
             required
           />
         </label>
@@ -143,6 +197,7 @@ export function WorkoutForm({ onLogged }: WorkoutFormProps) {
             className="mt-2 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base outline-none focus:border-[#789416] focus:ring-4 focus:ring-[#d8ff62]/30"
             defaultValue={nowForDatetimeLocal()}
             name="occurredAt"
+            ref={occurredAtRef}
             required
             type="datetime-local"
           />
@@ -172,6 +227,7 @@ export function WorkoutForm({ onLogged }: WorkoutFormProps) {
             max={1440}
             min={1}
             name="durationMinutes"
+            ref={durationRef}
             type="number"
           />
         </label>
@@ -181,6 +237,7 @@ export function WorkoutForm({ onLogged }: WorkoutFormProps) {
             className="mt-1 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base"
             min={0}
             name="distanceKm"
+            ref={distanceRef}
             step="0.01"
             type="number"
           />
@@ -217,18 +274,6 @@ export function WorkoutForm({ onLogged }: WorkoutFormProps) {
           className="mt-2 min-h-24 w-full rounded-2xl border border-stone-300 px-4 py-3 text-base"
           maxLength={2000}
           name="notes"
-        />
-      </label>
-
-      <label className="block text-sm font-semibold text-stone-700">
-        Evidence photo <span className="font-normal text-stone-400">(optional)</span>
-        <input
-          accept="image/jpeg,image/png,image/webp,image/heic"
-          capture="environment"
-          className="mt-2 block w-full text-sm text-stone-600 file:mr-3 file:min-h-11 file:rounded-xl file:border-0 file:bg-[#f8ffe4] file:px-4 file:text-sm file:font-semibold file:text-[#567118]"
-          name="evidencePhoto"
-          ref={evidenceInputRef}
-          type="file"
         />
       </label>
 

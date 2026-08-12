@@ -21,6 +21,7 @@ class MealCreate(BaseModel):
     fat_g: float | None = Field(default=None, ge=0, le=1_000)
     nutrition_is_estimated: bool = False
     visibility: Visibility = "private"
+    source: Source = "manual"
     notes: str | None = Field(default=None, max_length=2_000)
 
     @field_validator("meal_type", "description", "notes")

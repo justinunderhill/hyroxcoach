@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from typing import Annotated, Literal
 from uuid import UUID, uuid4
 
@@ -12,15 +13,21 @@ from api.config import (
     MEDIA_UPLOAD_URL_TTL_SECONDS,
 )
 from api.database import get_session, set_request_user
-from api.models import Meal, Measurement, MediaAsset, MediaLink, Workout
+from api.models import ExtractionResult, Meal, Measurement, MediaAsset, MediaLink, Workout
+from api.schemas.extraction import (
+    ExtractionConfirmRequest,
+    ExtractionRequest,
+    ExtractionResultResponse,
+)
 from api.schemas.media import (
     EntityType,
     MediaAssetResponse,
     MediaItemResponse,
+    MediaLinkRequest,
     MediaUploadIntentRequest,
     MediaUploadIntentResponse,
 )
-from api.services import storage
+from api.services import extraction, storage
 from api.services.teams import active_team_ids, resolve_primary_team_id, teammate_user_ids
 
 router = APIRouter(prefix="/api/media", tags=["media"])
@@ -186,11 +193,93 @@ def delete_media(
     session: DatabaseSession,
 ) -> None:
     set_request_user(session, user.id)
-    asset = session.get(MediaAsset, media_id)
-    if asset is None or asset.user_id != user.id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Media not found.")
+    asset = _load_owned_media_or_404(session, media_id, user)
 
     storage_path = asset.storage_path
     session.delete(asset)
     session.commit()
     storage.delete_object(storage_path)
+
+
+def _load_owned_media_or_404(
+    session: Session, media_id: UUID, user: AuthenticatedUser
+) -> MediaAsset:
+    asset = session.get(MediaAsset, media_id)
+    if asset is None or asset.user_id != user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Media not found.")
+    return asset
+
+
+@router.post(
+    "/{media_id}/extract",
+    response_model=ExtractionResultResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def extract_media(
+    media_id: UUID,
+    payload: ExtractionRequest,
+    user: CurrentUser,
+    session: DatabaseSession,
+) -> ExtractionResultResponse:
+    set_request_user(session, user.id)
+    asset = _load_owned_media_or_404(session, media_id, user)
+
+    result = extraction.run_extraction(session, asset, payload.extraction_type)
+    session.commit()
+    session.refresh(result)
+    return ExtractionResultResponse.model_validate(result)
+
+
+@router.post("/{media_id}/confirm", response_model=ExtractionResultResponse)
+def confirm_extraction(
+    media_id: UUID,
+    payload: ExtractionConfirmRequest,
+    user: CurrentUser,
+    session: DatabaseSession,
+) -> ExtractionResultResponse:
+    set_request_user(session, user.id)
+    _load_owned_media_or_404(session, media_id, user)
+
+    extraction_result = session.get(ExtractionResult, payload.extraction_result_id)
+    if extraction_result is None or extraction_result.media_asset_id != media_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Extraction not found.")
+
+    # Confirming only records the user's reviewed/corrected values on the
+    # extraction row — it never creates a workout/meal itself. The client
+    # takes confirmed_data and calls POST /api/workouts or /api/meals
+    # exactly once, then POST /api/media/{id}/link to attach this evidence.
+    extraction_result.confirmed_data = payload.confirmed_data
+    extraction_result.user_confirmed = True
+    extraction_result.confirmed_at = datetime.now(UTC)
+    session.commit()
+    session.refresh(extraction_result)
+    return ExtractionResultResponse.model_validate(extraction_result)
+
+
+@router.post("/{media_id}/link", status_code=status.HTTP_204_NO_CONTENT)
+def link_media(
+    media_id: UUID,
+    payload: MediaLinkRequest,
+    user: CurrentUser,
+    session: DatabaseSession,
+) -> None:
+    set_request_user(session, user.id)
+    _load_owned_media_or_404(session, media_id, user)
+    _require_owned_entity(session, payload.entity_type, payload.entity_id, user)
+
+    existing = session.scalars(
+        select(MediaLink).where(
+            MediaLink.media_asset_id == media_id,
+            MediaLink.entity_type == payload.entity_type,
+            MediaLink.entity_id == payload.entity_id,
+        )
+    ).first()
+    if existing is not None:
+        return
+
+    session.add(
+        MediaLink(
+            media_asset_id=media_id, entity_type=payload.entity_type, entity_id=payload.entity_id
+        )
+    )
+    session.commit()

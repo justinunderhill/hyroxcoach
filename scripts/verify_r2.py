@@ -32,7 +32,7 @@ try:
     urllib.request.urlopen(deleted_check_url)
 except urllib.error.HTTPError as error:
     if error.code != 404:
-        raise SystemExit(f"Expected 404 after delete, got {error.code}")
+        raise SystemExit(f"Expected 404 after delete, got {error.code}") from error
 else:
     raise SystemExit("Object still downloadable after delete.")
 

@@ -61,3 +61,10 @@ class MediaItemResponse(BaseModel):
     entity_id: UUID
     view_url: str
     expires_in: int
+
+
+class MediaLinkRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    entity_type: EntityType
+    entity_id: UUID

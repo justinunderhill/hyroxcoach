@@ -3,12 +3,26 @@
 import { FormEvent, useRef, useState } from "react";
 
 import { authenticatedFetch } from "@/lib/auth/client";
-import { uploadMedia } from "@/lib/media";
+import { confirmExtraction, linkMedia } from "@/lib/media";
+import { ScreenshotImport } from "@/components/screenshot-import";
 
 function nowForDatetimeLocal(): string {
   const now = new Date();
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
   return now.toISOString().slice(0, 16);
+}
+
+function summarizeMealExtraction(data: Record<string, unknown>): string {
+  const foods = Array.isArray(data.likely_foods) ? (data.likely_foods as string[]) : [];
+  const parts: string[] = [];
+  if (foods.length > 0) parts.push(foods.join(", "));
+  if (
+    typeof data.estimated_calories_low === "number" &&
+    typeof data.estimated_calories_high === "number"
+  ) {
+    parts.push(`~${data.estimated_calories_low}–${data.estimated_calories_high} kcal (estimate)`);
+  }
+  return parts.length > 0 ? parts.join(" · ") : "No details detected in the photo.";
 }
 
 type MealFormProps = {
@@ -18,7 +32,31 @@ type MealFormProps = {
 export function MealForm({ onLogged }: MealFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const photoInputRef = useRef<HTMLInputElement>(null);
+  const descriptionRef = useRef<HTMLInputElement>(null);
+  const mealTypeRef = useRef<HTMLInputElement>(null);
+  const caloriesRef = useRef<HTMLInputElement>(null);
+  const pendingMediaId = useRef<string | null>(null);
+  const pendingExtractionResultId = useRef<string | null>(null);
+
+  function handleMediaUploaded(mediaAssetId: string) {
+    pendingMediaId.current = mediaAssetId;
+  }
+
+  function handleApplyExtraction(data: Record<string, unknown>, extractionResultId: string) {
+    const foods = Array.isArray(data.likely_foods) ? (data.likely_foods as string[]) : [];
+    if (foods.length > 0 && descriptionRef.current) {
+      descriptionRef.current.value = foods.join(", ");
+    }
+    if (typeof data.meal_type === "string" && data.meal_type && mealTypeRef.current) {
+      mealTypeRef.current.value = data.meal_type;
+    }
+    const low = typeof data.estimated_calories_low === "number" ? data.estimated_calories_low : null;
+    const high = typeof data.estimated_calories_high === "number" ? data.estimated_calories_high : null;
+    if (low !== null && high !== null && caloriesRef.current) {
+      caloriesRef.current.value = String(Math.round((low + high) / 2));
+    }
+    pendingExtractionResultId.current = extractionResultId;
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -27,8 +65,8 @@ export function MealForm({ onLogged }: MealFormProps) {
 
     const form = event.currentTarget;
     const data = new FormData(form);
-    const mealPhoto = photoInputRef.current?.files?.[0] ?? null;
     const occurredAtLocal = String(data.get("occurredAt") ?? "");
+    const usedExtraction = pendingExtractionResultId.current !== null;
 
     const payload = {
       occurred_at: occurredAtLocal ? new Date(occurredAtLocal).toISOString() : new Date().toISOString(),
@@ -38,7 +76,9 @@ export function MealForm({ onLogged }: MealFormProps) {
       protein_g: data.get("proteinG") ? Number(data.get("proteinG")) : null,
       carbs_g: data.get("carbsG") ? Number(data.get("carbsG")) : null,
       fat_g: data.get("fatG") ? Number(data.get("fatG")) : null,
+      nutrition_is_estimated: usedExtraction,
       visibility: String(data.get("visibility") ?? "private"),
+      source: usedExtraction ? "image" : "manual",
       notes: String(data.get("notes") ?? "").trim() || null,
     };
 
@@ -55,19 +95,21 @@ export function MealForm({ onLogged }: MealFormProps) {
         throw new Error(typeof message === "string" ? message : "Your meal could not be saved.");
       }
 
-      if (mealPhoto) {
-        const meal: { id: string } = await response.json();
+      const meal: { id: string } = await response.json();
+      const mediaId = pendingMediaId.current;
+      if (mediaId) {
         try {
-          await uploadMedia(mealPhoto, {
-            purpose: "meal_photo",
-            entityType: "meal",
-            entityId: meal.id,
-          });
+          await linkMedia(mediaId, "meal", meal.id);
+          if (pendingExtractionResultId.current) {
+            await confirmExtraction(mediaId, pendingExtractionResultId.current, payload);
+          }
         } catch {
-          setError("Meal saved, but the photo could not be uploaded.");
+          setError("Meal saved, but the photo could not be attached.");
         }
       }
 
+      pendingMediaId.current = null;
+      pendingExtractionResultId.current = null;
       form.reset();
       onLogged();
     } catch (submissionError) {
@@ -81,6 +123,15 @@ export function MealForm({ onLogged }: MealFormProps) {
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
+      <ScreenshotImport
+        extractionType="meal"
+        label="Import from a meal photo"
+        onApply={handleApplyExtraction}
+        onMediaUploaded={handleMediaUploaded}
+        purpose="meal_photo"
+        summarize={summarizeMealExtraction}
+      />
+
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block text-sm font-semibold text-stone-700 sm:col-span-2">
           What did you eat?
@@ -89,6 +140,7 @@ export function MealForm({ onLogged }: MealFormProps) {
             maxLength={500}
             name="description"
             placeholder="Oats, banana, protein shake"
+            ref={descriptionRef}
             required
           />
         </label>
@@ -101,6 +153,7 @@ export function MealForm({ onLogged }: MealFormProps) {
             maxLength={30}
             name="mealType"
             placeholder="breakfast"
+            ref={mealTypeRef}
           />
           <datalist id="meal-type-options">
             <option value="breakfast" />
@@ -125,7 +178,7 @@ export function MealForm({ onLogged }: MealFormProps) {
       <div className="grid grid-cols-4 gap-3">
         <label className="text-xs font-semibold text-stone-500">
           Calories
-          <input className="mt-1 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base" min={0} name="calories" type="number" />
+          <input className="mt-1 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base" min={0} name="calories" ref={caloriesRef} type="number" />
         </label>
         <label className="text-xs font-semibold text-stone-500">
           Protein, g
@@ -158,18 +211,6 @@ export function MealForm({ onLogged }: MealFormProps) {
       <label className="block text-sm font-semibold text-stone-700">
         Notes <span className="font-normal text-stone-400">(optional)</span>
         <textarea className="mt-2 min-h-24 w-full rounded-2xl border border-stone-300 px-4 py-3 text-base" maxLength={2000} name="notes" />
-      </label>
-
-      <label className="block text-sm font-semibold text-stone-700">
-        Meal photo <span className="font-normal text-stone-400">(optional)</span>
-        <input
-          accept="image/jpeg,image/png,image/webp,image/heic"
-          capture="environment"
-          className="mt-2 block w-full text-sm text-stone-600 file:mr-3 file:min-h-11 file:rounded-xl file:border-0 file:bg-[#f8ffe4] file:px-4 file:text-sm file:font-semibold file:text-[#567118]"
-          name="mealPhoto"
-          ref={photoInputRef}
-          type="file"
-        />
       </label>
 
       {error ? <p aria-live="polite" className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-800">{error}</p> : null}

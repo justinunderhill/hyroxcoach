@@ -371,6 +371,42 @@ class MediaLink(Base):
     )
 
 
+class ExtractionResult(Base):
+    __tablename__ = "extraction_results"
+    __table_args__ = (
+        CheckConstraint(
+            "extraction_type IN ('workout', 'meal')", name="ck_extraction_results_type"
+        ),
+        CheckConstraint("status IN ('succeeded', 'failed')", name="ck_extraction_results_status"),
+        CheckConstraint(
+            "confidence IS NULL OR (confidence >= 0 AND confidence <= 1)",
+            name="ck_extraction_results_confidence_range",
+        ),
+        Index("ix_extraction_results_media_asset_id", "media_asset_id"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    media_asset_id: Mapped[UUID] = mapped_column(
+        Uuid, ForeignKey("media_assets.id", ondelete="CASCADE")
+    )
+    extraction_type: Mapped[str] = mapped_column(String(16))
+    model_name: Mapped[str] = mapped_column(String(80))
+    status: Mapped[str] = mapped_column(String(16))
+    confidence: Mapped[Decimal | None] = mapped_column(Numeric(3, 2), nullable=True)
+    extracted_data: Mapped[dict[str, Any]] = mapped_column(
+        JSON().with_variant(postgresql.JSONB, "postgresql"), default=dict
+    )
+    user_confirmed: Mapped[bool] = mapped_column(Boolean, default=False)
+    confirmed_data: Mapped[dict[str, Any] | None] = mapped_column(
+        JSON().with_variant(postgresql.JSONB, "postgresql"), nullable=True
+    )
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 class CindyResult(Base):
     __tablename__ = "cindy_results"
     __table_args__ = (

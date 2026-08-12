@@ -19,6 +19,7 @@ NEON_AUTH_BASE_URL=
 NEON_AUTH_JWKS_URL=
 NEON_AUTH_COOKIE_SECRET=
 OPENAI_API_KEY=
+OPENAI_EXTRACTION_MODEL=gpt-4o-mini
 R2_ACCOUNT_ID=
 R2_ACCESS_KEY_ID=
 R2_SECRET_ACCESS_KEY=
@@ -26,6 +27,8 @@ R2_BUCKET_NAME=
 ```
 
 `R2_*` variables configure the private Cloudflare R2 bucket used for media uploads (Phase 5). The bucket must be private; the API issues short-lived presigned PUT/GET URLs rather than exposing objects publicly.
+
+`OPENAI_EXTRACTION_MODEL` selects the vision-capable model used for Phase 6 screenshot/meal-photo extraction (`api/services/ai_client.py`). Defaults to `gpt-4o-mini` if unset; override without a code change if a newer/cheaper vision model becomes preferable.
 
 `DATABASE_URL` is the pooled application connection. `DATABASE_URL_UNPOOLED` is reserved for migrations, dumps and administrative operations.
 

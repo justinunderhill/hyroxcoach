@@ -54,9 +54,12 @@ Example:
   "distance_km": 5,
   "rpe": 8,
   "visibility": "team",
+  "source": "manual",
   "notes": "Strong finish."
 }
 ```
+
+`source` is `manual` (default), `image` (created from a confirmed AI extraction), or `integration`.
 
 ### GET `/api/workouts`
 Filters:
@@ -135,8 +138,21 @@ Only entities the caller can view (owner, or team-visible) are returned.
 ### DELETE `/api/media/{id}`
 Owner only. Deletes the storage object and cascades linked `media_links` rows.
 
+### POST `/api/media/{id}/link`
+Attach an already-uploaded media asset to an entity the caller owns. Idempotent — linking the same asset to the same entity twice is a no-op.
+
+Body:
+```json
+{
+  "entity_type": "workout",
+  "entity_id": "..."
+}
+```
+
+Used after extraction: the media is uploaded and extracted before the workout/meal exists, so linking happens once the record is created.
+
 ### POST `/api/media/{id}/extract`
-Request AI extraction. Not yet implemented — planned for Phase 6.
+Request AI extraction. Runs synchronously and returns the persisted result, including confidence and any uncertainty notes.
 
 Body:
 ```json
@@ -145,10 +161,38 @@ Body:
 }
 ```
 
-### POST `/api/media/{id}/confirm`
-Confirm or correct extracted data. Not yet implemented — planned for Phase 6.
+Response:
+```json
+{
+  "id": "...",
+  "media_asset_id": "...",
+  "extraction_type": "workout",
+  "model_name": "gpt-4o-mini",
+  "status": "succeeded",
+  "confidence": 0.82,
+  "extracted_data": { "distance_km": 5.0, "duration_seconds": 1691, "...": "..." },
+  "user_confirmed": false,
+  "confirmed_data": null,
+  "error_message": null,
+  "created_at": "...",
+  "confirmed_at": null
+}
+```
 
-Confirmation must not automatically create duplicate workout/meal entries.
+A model/network failure is recorded with `status: "failed"` and a bounded `error_message` rather than a 5xx — the user can retry or fill the record manually.
+
+### POST `/api/media/{id}/confirm`
+Record the user's reviewed/corrected values against a specific extraction result.
+
+Body:
+```json
+{
+  "extraction_result_id": "...",
+  "confirmed_data": { "distance_km": 5.1, "...": "..." }
+}
+```
+
+Confirming never creates or updates a workout/meal itself — it only sets `confirmed_data`/`user_confirmed`/`confirmed_at` on the extraction row. The client takes `confirmed_data` and calls `POST /api/workouts` or `POST /api/meals` exactly once (with `source: "image"`), then `POST /api/media/{id}/link` to attach the evidence. This keeps confirmation from automatically creating duplicate entries.
 
 ## Analytics
 
