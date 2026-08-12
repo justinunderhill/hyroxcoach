@@ -318,3 +318,45 @@ class DailyStep(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+
+
+class CindyResult(Base):
+    __tablename__ = "cindy_results"
+    __table_args__ = (
+        CheckConstraint("full_rounds >= 0", name="ck_cindy_results_full_rounds_positive"),
+        CheckConstraint("extra_pullups >= 0", name="ck_cindy_results_extra_pullups_positive"),
+        CheckConstraint("extra_pushups >= 0", name="ck_cindy_results_extra_pushups_positive"),
+        CheckConstraint("extra_squats >= 0", name="ck_cindy_results_extra_squats_positive"),
+        CheckConstraint("total_reps >= 0", name="ck_cindy_results_total_reps_positive"),
+        CheckConstraint(
+            "total_seconds > 0 AND total_seconds <= 1200", name="ck_cindy_results_total_seconds"
+        ),
+        CheckConstraint(
+            "calories_burned IS NULL OR calories_burned >= 0",
+            name="ck_cindy_results_calories_positive",
+        ),
+        CheckConstraint(
+            "calorie_source IS NULL OR calorie_source IN ('external', 'estimated')",
+            name="ck_cindy_results_calorie_source",
+        ),
+        Index("ix_cindy_results_user_id", "user_id"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    workout_id: Mapped[UUID] = mapped_column(
+        Uuid, ForeignKey("workouts.id", ondelete="CASCADE"), unique=True
+    )
+    user_id: Mapped[str] = mapped_column(String(255))
+    full_rounds: Mapped[int] = mapped_column(Integer)
+    extra_pullups: Mapped[int] = mapped_column(Integer, default=0)
+    extra_pushups: Mapped[int] = mapped_column(Integer, default=0)
+    extra_squats: Mapped[int] = mapped_column(Integer, default=0)
+    total_reps: Mapped[int] = mapped_column(Integer)
+    total_seconds: Mapped[int] = mapped_column(Integer)
+    completed_as_prescribed: Mapped[bool] = mapped_column(Boolean)
+    calories_burned: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    calorie_source: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    calorie_estimation_version: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )

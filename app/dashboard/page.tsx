@@ -30,6 +30,7 @@ export default async function DashboardPage() {
             <h2 className="mt-2 text-xl font-semibold text-[#263711]">Log a workout</h2>
             <p className="mt-2 text-sm leading-6 text-stone-600">Runs, MMA, strength, walks or HYROX-specific work.</p>
             <Link className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-[#15271e] px-4 text-sm font-bold text-white" href="/workouts">Log workout</Link>
+            <Link className="mt-3 inline-flex min-h-11 items-center rounded-xl border border-[#263711]/20 px-4 text-sm font-semibold text-[#263711]" href="/cindy">Do Cindy</Link>
           </div>
           <div className="rounded-3xl border border-stone-200 bg-white p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">Log</p>

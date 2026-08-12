@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from api.config import frontend_origins
 from api.routers.analytics import router as analytics_router
+from api.routers.cindy import router as cindy_router
 from api.routers.meals import router as meals_router
 from api.routers.measurements import router as measurements_router
 from api.routers.nutrition import router as nutrition_router
@@ -43,6 +44,7 @@ app.include_router(meals_router)
 app.include_router(measurements_router)
 app.include_router(nutrition_router)
 app.include_router(steps_router)
+app.include_router(cindy_router)
 
 
 def error_response(code: str, message: str, request_id: str) -> dict[str, dict[str, str]]:
