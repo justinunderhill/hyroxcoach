@@ -8,10 +8,32 @@ CLAUDE.md rule 2.
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from typing import Literal
 
 WEEK_DAYS = 7
 FIVE_K_MIN_KM = 4.9
 FIVE_K_MAX_KM = 5.1
+
+# Matches workout_categories.slug for category_group = 'hyrox_station' (see
+# migrations/20260812_0004). An exercise_performance is treated as station work
+# when its normalized_exercise_key matches one of these.
+STATION_EXERCISE_KEYS = {
+    "skierg",
+    "sled_push",
+    "sled_pull",
+    "burpee_broad_jumps",
+    "row",
+    "farmers_carry",
+    "sandbag_lunges",
+    "wall_balls",
+}
+
+MetricType = Literal["load_kg", "duration_seconds", "distance_m", "reps"]
+Trend = Literal["improving", "flat", "declining"]
+
+# Lower values are better for time trials; higher is better for the rest.
+LOWER_IS_BETTER: set[MetricType] = {"duration_seconds"}
+TREND_THRESHOLD = 0.02
 
 
 @dataclass(frozen=True)
@@ -135,3 +157,174 @@ def running_summary(
         recent=recent_out,
         best_5k_seconds=best_5k_seconds,
     )
+
+
+@dataclass(frozen=True)
+class ExercisePerformanceSample:
+    id: str
+    occurred_at: datetime
+    exercise_key: str
+    exercise_name: str
+    load_kg: float | None
+    reps: int | None
+    duration_seconds: int | None
+    distance_m: float | None
+
+
+@dataclass(frozen=True)
+class ExercisePoint:
+    id: str
+    occurred_at: datetime
+    load_kg: float | None
+    reps: int | None
+    duration_seconds: int | None
+    distance_m: float | None
+
+
+@dataclass(frozen=True)
+class ExerciseProgression:
+    exercise_key: str
+    exercise_name: str
+    primary_metric: MetricType
+    trend: Trend | None
+    points: list[ExercisePoint]
+
+
+def _primary_metric(points: list[ExercisePoint], min_count: int = 2) -> MetricType:
+    for metric in ("load_kg", "duration_seconds", "distance_m", "reps"):
+        if sum(1 for point in points if getattr(point, metric) is not None) >= min_count:
+            return metric  # type: ignore[return-value]
+    return "reps"
+
+
+def _trend_for_metric(points: list[ExercisePoint], metric: MetricType) -> Trend | None:
+    ordered = sorted(points, key=lambda point: point.occurred_at)
+    values = [getattr(point, metric) for point in ordered if getattr(point, metric) is not None]
+    if len(values) < 2:
+        return None
+
+    midpoint = len(values) // 2 or 1
+    first_half = values[:midpoint]
+    second_half = values[midpoint:] or values[-1:]
+    first_avg = sum(first_half) / len(first_half)
+    second_avg = sum(second_half) / len(second_half)
+    if first_avg == 0:
+        return None
+
+    change = (second_avg - first_avg) / abs(first_avg)
+    if metric in LOWER_IS_BETTER:
+        change = -change
+
+    if change > TREND_THRESHOLD:
+        return "improving"
+    if change < -TREND_THRESHOLD:
+        return "declining"
+    return "flat"
+
+
+def exercise_progression(
+    samples: list[ExercisePerformanceSample],
+    recent_limit: int = 20,
+) -> list[ExerciseProgression]:
+    grouped: dict[str, list[ExercisePerformanceSample]] = {}
+    for sample in samples:
+        grouped.setdefault(sample.exercise_key, []).append(sample)
+
+    results: list[ExerciseProgression] = []
+    for exercise_key, exercise_samples in grouped.items():
+        ordered = sorted(exercise_samples, key=lambda sample: sample.occurred_at, reverse=True)
+        latest_name = ordered[0].exercise_name
+        points = [
+            ExercisePoint(
+                id=sample.id,
+                occurred_at=sample.occurred_at,
+                load_kg=sample.load_kg,
+                reps=sample.reps,
+                duration_seconds=sample.duration_seconds,
+                distance_m=sample.distance_m,
+            )
+            for sample in ordered[:recent_limit]
+        ]
+        metric = _primary_metric(points)
+        results.append(
+            ExerciseProgression(
+                exercise_key=exercise_key,
+                exercise_name=latest_name,
+                primary_metric=metric,
+                trend=_trend_for_metric(points, metric),
+                points=points,
+            )
+        )
+
+    results.sort(key=lambda progression: progression.points[0].occurred_at, reverse=True)
+    return results
+
+
+def station_metric_history(
+    samples: list[ExercisePerformanceSample],
+    recent_limit: int = 20,
+) -> list[ExerciseProgression]:
+    station_samples = [sample for sample in samples if sample.exercise_key in STATION_EXERCISE_KEYS]
+    return exercise_progression(station_samples, recent_limit=recent_limit)
+
+
+@dataclass(frozen=True)
+class PersonalBest:
+    exercise_key: str
+    exercise_name: str
+    metric: MetricType
+    best_value: float
+    achieved_at: datetime
+    is_current: bool
+
+
+def _best_value(metric: MetricType, values: list[tuple[datetime, float]]) -> tuple[datetime, float]:
+    if metric in LOWER_IS_BETTER:
+        return min(values, key=lambda entry: entry[1])
+    return max(values, key=lambda entry: entry[1])
+
+
+def personal_bests(samples: list[ExercisePerformanceSample]) -> list[PersonalBest]:
+    grouped: dict[str, list[ExercisePerformanceSample]] = {}
+    for sample in samples:
+        grouped.setdefault(sample.exercise_key, []).append(sample)
+
+    results: list[PersonalBest] = []
+    for exercise_key, exercise_samples in grouped.items():
+        points = [
+            ExercisePoint(
+                id=sample.id,
+                occurred_at=sample.occurred_at,
+                load_kg=sample.load_kg,
+                reps=sample.reps,
+                duration_seconds=sample.duration_seconds,
+                distance_m=sample.distance_m,
+            )
+            for sample in exercise_samples
+        ]
+        metric = _primary_metric(points, min_count=1)
+        values = [
+            (sample.occurred_at, getattr(sample, metric))
+            for sample in exercise_samples
+            if getattr(sample, metric) is not None
+        ]
+        if not values:
+            continue
+
+        best_at, best_value = _best_value(metric, values)
+        latest_at = max(sample.occurred_at for sample in exercise_samples)
+        latest_name = max(exercise_samples, key=lambda sample: sample.occurred_at).exercise_name
+
+        results.append(
+            PersonalBest(
+                exercise_key=exercise_key,
+                exercise_name=latest_name,
+                metric=metric,
+                best_value=best_value,
+                achieved_at=best_at,
+                is_current=best_at == latest_at,
+            )
+        )
+
+    results.sort(key=lambda best: best.achieved_at, reverse=True)
+    return results

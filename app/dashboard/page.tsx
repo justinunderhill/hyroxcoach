@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { ExerciseProgress } from "@/components/exercise-progress";
 import { ProfileSummary } from "@/components/profile-summary";
 import { SignOutButton } from "@/components/sign-out-button";
+import { TeamComparison } from "@/components/team-comparison";
 import { WeeklyStats } from "@/components/weekly-stats";
 import { WorkoutFeed } from "@/components/workout-feed";
 import { getServerAuth } from "@/lib/auth/server";
@@ -46,6 +48,10 @@ export default async function DashboardPage() {
         </section>
         <section className="mt-8">
           <WeeklyStats />
+        </section>
+        <section className="mt-6 grid gap-5 md:grid-cols-2">
+          <ExerciseProgress />
+          <TeamComparison />
         </section>
         <section className="mt-8">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">Recent activity</p>
