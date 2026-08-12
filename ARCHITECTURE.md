@@ -63,7 +63,7 @@ Postgres RLS provides defence-in-depth around user/team access. If a policy reli
 
 ## 5. Object storage
 
-Neon Database and Neon Auth do not by themselves provision the MVP's media bucket. Select a private S3-compatible object-storage provider before Phase 5. Neon Object Storage may be evaluated separately; it is not enabled by the current Database + Auth decision.
+Neon Database and Neon Auth do not by themselves provision the MVP's media bucket. The MVP uses Cloudflare R2 (S3-compatible) via `boto3`, accessed through `api/services/storage.py`. Neon Object Storage may be evaluated separately; it is not enabled by the current Database + Auth decision.
 
 ## 6. Deployment
 

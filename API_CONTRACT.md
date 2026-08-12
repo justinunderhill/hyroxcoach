@@ -107,10 +107,36 @@ Owner only.
 ## Media
 
 ### POST `/api/media/upload-intent`
-Return signed/authorized storage target.
+Create a `media_assets` row and return a short-lived presigned PUT URL for the private R2 bucket.
+
+Body:
+```json
+{
+  "purpose": "workout_evidence",
+  "mime_type": "image/jpeg",
+  "size_bytes": 842311,
+  "visibility": "private",
+  "entity_type": "workout",
+  "entity_id": "..."
+}
+```
+
+`entity_type`/`entity_id` are optional but must be provided together. When present, the caller must own the referenced workout/meal/measurement; a `media_links` row is created in the same request. The client uploads the file bytes directly to `upload_url` via `PUT` with `upload_headers`.
+
+### GET `/api/media`
+Return media for a batch of entities of one type, with freshly signed short-lived view URLs.
+
+Query:
+- `entity_type` (`workout`, `meal`, `measurement`)
+- `entity_ids` (comma-separated UUIDs)
+
+Only entities the caller can view (owner, or team-visible) are returned.
+
+### DELETE `/api/media/{id}`
+Owner only. Deletes the storage object and cascades linked `media_links` rows.
 
 ### POST `/api/media/{id}/extract`
-Request AI extraction.
+Request AI extraction. Not yet implemented — planned for Phase 6.
 
 Body:
 ```json
@@ -120,7 +146,7 @@ Body:
 ```
 
 ### POST `/api/media/{id}/confirm`
-Confirm or correct extracted data.
+Confirm or correct extracted data. Not yet implemented — planned for Phase 6.
 
 Confirmation must not automatically create duplicate workout/meal entries.
 

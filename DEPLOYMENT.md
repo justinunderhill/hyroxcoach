@@ -19,7 +19,13 @@ NEON_AUTH_BASE_URL=
 NEON_AUTH_JWKS_URL=
 NEON_AUTH_COOKIE_SECRET=
 OPENAI_API_KEY=
+R2_ACCOUNT_ID=
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+R2_BUCKET_NAME=
 ```
+
+`R2_*` variables configure the private Cloudflare R2 bucket used for media uploads (Phase 5). The bucket must be private; the API issues short-lived presigned PUT/GET URLs rather than exposing objects publicly.
 
 `DATABASE_URL` is the pooled application connection. `DATABASE_URL_UNPOOLED` is reserved for migrations, dumps and administrative operations.
 

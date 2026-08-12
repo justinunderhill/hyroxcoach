@@ -1,8 +1,9 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 
 import { authenticatedFetch } from "@/lib/auth/client";
+import { uploadMedia } from "@/lib/media";
 
 const categories = [
   { slug: "running", label: "Running" },
@@ -35,6 +36,7 @@ type WorkoutFormProps = {
 export function WorkoutForm({ onLogged }: WorkoutFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const evidenceInputRef = useRef<HTMLInputElement>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -43,6 +45,7 @@ export function WorkoutForm({ onLogged }: WorkoutFormProps) {
 
     const form = event.currentTarget;
     const data = new FormData(form);
+    const evidencePhoto = evidenceInputRef.current?.files?.[0] ?? null;
     const selectedCategories = categories
       .map((category) => category.slug)
       .filter((slug) => data.get(slug) === "on");
@@ -71,6 +74,19 @@ export function WorkoutForm({ onLogged }: WorkoutFormProps) {
         const body = await response.json().catch(() => null);
         const message = body?.error?.message;
         throw new Error(typeof message === "string" ? message : "Your workout could not be saved.");
+      }
+
+      if (evidencePhoto) {
+        const workout: { id: string } = await response.json();
+        try {
+          await uploadMedia(evidencePhoto, {
+            purpose: "workout_evidence",
+            entityType: "workout",
+            entityId: workout.id,
+          });
+        } catch {
+          setError("Workout saved, but the photo could not be uploaded.");
+        }
       }
 
       form.reset();
@@ -201,6 +217,18 @@ export function WorkoutForm({ onLogged }: WorkoutFormProps) {
           className="mt-2 min-h-24 w-full rounded-2xl border border-stone-300 px-4 py-3 text-base"
           maxLength={2000}
           name="notes"
+        />
+      </label>
+
+      <label className="block text-sm font-semibold text-stone-700">
+        Evidence photo <span className="font-normal text-stone-400">(optional)</span>
+        <input
+          accept="image/jpeg,image/png,image/webp,image/heic"
+          capture="environment"
+          className="mt-2 block w-full text-sm text-stone-600 file:mr-3 file:min-h-11 file:rounded-xl file:border-0 file:bg-[#f8ffe4] file:px-4 file:text-sm file:font-semibold file:text-[#567118]"
+          name="evidencePhoto"
+          ref={evidenceInputRef}
+          type="file"
         />
       </label>
 

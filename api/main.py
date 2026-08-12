@@ -11,6 +11,7 @@ from api.routers.analytics import router as analytics_router
 from api.routers.cindy import router as cindy_router
 from api.routers.meals import router as meals_router
 from api.routers.measurements import router as measurements_router
+from api.routers.media import router as media_router
 from api.routers.nutrition import router as nutrition_router
 from api.routers.profiles import router as profiles_router
 from api.routers.steps import router as steps_router
@@ -42,6 +43,7 @@ app.include_router(workouts_router)
 app.include_router(analytics_router)
 app.include_router(meals_router)
 app.include_router(measurements_router)
+app.include_router(media_router)
 app.include_router(nutrition_router)
 app.include_router(steps_router)
 app.include_router(cindy_router)

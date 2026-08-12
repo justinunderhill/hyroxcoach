@@ -3,6 +3,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 
 import { authenticatedFetch } from "@/lib/auth/client";
+import { listMedia, MediaItem } from "@/lib/media";
 
 type Meal = {
   id: string;
@@ -19,7 +20,7 @@ type Meal = {
 
 type FeedState =
   | { status: "loading" }
-  | { status: "ready"; meals: Meal[] }
+  | { status: "ready"; meals: Meal[]; mediaByMealId: Map<string, MediaItem[]> }
   | { status: "error" };
 
 export type MealFeedHandle = {
@@ -50,7 +51,18 @@ export const MealFeed = forwardRef<MealFeedHandle>(function MealFeed(_props, ref
       .then(async (response) => {
         if (!response.ok) throw new Error();
         const meals: Meal[] = await response.json();
-        setState({ status: "ready", meals });
+        const media = await listMedia(
+          "meal",
+          meals.map((meal) => meal.id),
+          controller.signal,
+        ).catch(() => []);
+        const mediaByMealId = new Map<string, MediaItem[]>();
+        for (const item of media) {
+          const existing = mediaByMealId.get(item.entity_id) ?? [];
+          existing.push(item);
+          mediaByMealId.set(item.entity_id, existing);
+        }
+        setState({ status: "ready", meals, mediaByMealId });
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
@@ -90,6 +102,19 @@ export const MealFeed = forwardRef<MealFeedHandle>(function MealFeed(_props, ref
             </span>
           </div>
           {formatMacros(meal) ? <p className="mt-2 text-sm text-stone-600">{formatMacros(meal)}</p> : null}
+          {(state.mediaByMealId.get(meal.id) ?? []).length > 0 ? (
+            <div className="mt-3 flex gap-2">
+              {(state.mediaByMealId.get(meal.id) ?? []).map((item) => (
+                <a href={item.view_url} key={item.media_asset.id} rel="noreferrer" target="_blank">
+                  <img
+                    alt="Meal photo"
+                    className="size-16 rounded-xl border border-stone-200 object-cover"
+                    src={item.view_url}
+                  />
+                </a>
+              ))}
+            </div>
+          ) : null}
         </li>
       ))}
     </ul>

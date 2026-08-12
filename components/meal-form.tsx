@@ -1,8 +1,9 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 
 import { authenticatedFetch } from "@/lib/auth/client";
+import { uploadMedia } from "@/lib/media";
 
 function nowForDatetimeLocal(): string {
   const now = new Date();
@@ -17,6 +18,7 @@ type MealFormProps = {
 export function MealForm({ onLogged }: MealFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -25,6 +27,7 @@ export function MealForm({ onLogged }: MealFormProps) {
 
     const form = event.currentTarget;
     const data = new FormData(form);
+    const mealPhoto = photoInputRef.current?.files?.[0] ?? null;
     const occurredAtLocal = String(data.get("occurredAt") ?? "");
 
     const payload = {
@@ -50,6 +53,19 @@ export function MealForm({ onLogged }: MealFormProps) {
         const body = await response.json().catch(() => null);
         const message = body?.error?.message;
         throw new Error(typeof message === "string" ? message : "Your meal could not be saved.");
+      }
+
+      if (mealPhoto) {
+        const meal: { id: string } = await response.json();
+        try {
+          await uploadMedia(mealPhoto, {
+            purpose: "meal_photo",
+            entityType: "meal",
+            entityId: meal.id,
+          });
+        } catch {
+          setError("Meal saved, but the photo could not be uploaded.");
+        }
       }
 
       form.reset();
@@ -142,6 +158,18 @@ export function MealForm({ onLogged }: MealFormProps) {
       <label className="block text-sm font-semibold text-stone-700">
         Notes <span className="font-normal text-stone-400">(optional)</span>
         <textarea className="mt-2 min-h-24 w-full rounded-2xl border border-stone-300 px-4 py-3 text-base" maxLength={2000} name="notes" />
+      </label>
+
+      <label className="block text-sm font-semibold text-stone-700">
+        Meal photo <span className="font-normal text-stone-400">(optional)</span>
+        <input
+          accept="image/jpeg,image/png,image/webp,image/heic"
+          capture="environment"
+          className="mt-2 block w-full text-sm text-stone-600 file:mr-3 file:min-h-11 file:rounded-xl file:border-0 file:bg-[#f8ffe4] file:px-4 file:text-sm file:font-semibold file:text-[#567118]"
+          name="mealPhoto"
+          ref={photoInputRef}
+          type="file"
+        />
       </label>
 
       {error ? <p aria-live="polite" className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-800">{error}</p> : null}

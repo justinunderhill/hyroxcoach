@@ -320,6 +320,57 @@ class DailyStep(Base):
     )
 
 
+class MediaAsset(Base):
+    __tablename__ = "media_assets"
+    __table_args__ = (
+        CheckConstraint("size_bytes > 0", name="ck_media_assets_size_positive"),
+        CheckConstraint(
+            "purpose IN ('workout_evidence', 'meal_photo', 'measurement', 'other')",
+            name="ck_media_assets_purpose",
+        ),
+        CheckConstraint("visibility IN ('team', 'private')", name="ck_media_assets_visibility"),
+        Index("ix_media_assets_user_id", "user_id"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    user_id: Mapped[str] = mapped_column(String(255))
+    team_id: Mapped[UUID | None] = mapped_column(
+        Uuid, ForeignKey("teams.id", ondelete="SET NULL"), nullable=True
+    )
+    storage_path: Mapped[str] = mapped_column(Text, unique=True)
+    mime_type: Mapped[str] = mapped_column(String(80))
+    size_bytes: Mapped[int] = mapped_column(Integer)
+    purpose: Mapped[str] = mapped_column(String(24))
+    visibility: Mapped[str] = mapped_column(String(16), default="private")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
+class MediaLink(Base):
+    __tablename__ = "media_links"
+    __table_args__ = (
+        CheckConstraint(
+            "entity_type IN ('workout', 'meal', 'measurement')",
+            name="ck_media_links_entity_type",
+        ),
+        UniqueConstraint(
+            "media_asset_id", "entity_type", "entity_id", name="uq_media_links_asset_entity"
+        ),
+        Index("ix_media_links_entity", "entity_type", "entity_id"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    media_asset_id: Mapped[UUID] = mapped_column(
+        Uuid, ForeignKey("media_assets.id", ondelete="CASCADE")
+    )
+    entity_type: Mapped[str] = mapped_column(String(20))
+    entity_id: Mapped[UUID] = mapped_column(Uuid)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
 class CindyResult(Base):
     __tablename__ = "cindy_results"
     __table_args__ = (
