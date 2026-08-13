@@ -16,6 +16,7 @@ from api.routers.media import router as media_router
 from api.routers.nutrition import router as nutrition_router
 from api.routers.profiles import router as profiles_router
 from api.routers.steps import router as steps_router
+from api.routers.teams import invite_router as team_invites_router
 from api.routers.teams import router as teams_router
 from api.routers.workouts import router as workouts_router
 
@@ -50,6 +51,7 @@ app.include_router(nutrition_router)
 app.include_router(steps_router)
 app.include_router(cindy_router)
 app.include_router(teams_router)
+app.include_router(team_invites_router)
 app.include_router(coach_router)
 
 

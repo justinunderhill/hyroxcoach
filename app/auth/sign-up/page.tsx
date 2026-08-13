@@ -2,7 +2,12 @@ import Link from "next/link";
 
 import { AuthForm } from "@/components/auth-form";
 
-export default function SignUpPage() {
+export default async function SignUpPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
   return (
     <main className="grid min-h-screen place-items-center px-5 py-10">
       <section className="w-full max-w-md rounded-[2rem] border border-white/70 bg-white p-7 shadow-[0_30px_90px_rgba(26,44,34,0.13)] sm:p-10">
@@ -11,7 +16,7 @@ export default function SignUpPage() {
         </Link>
         <h1 className="mt-8 text-3xl font-semibold tracking-[-0.045em] text-[#15221b]">Create your account</h1>
         <p className="mt-2 text-sm leading-6 text-stone-500">Your records remain yours, even when you train as a team.</p>
-        <AuthForm mode="sign-up" />
+        <AuthForm mode="sign-up" next={next} />
       </section>
     </main>
   );

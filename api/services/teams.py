@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -56,6 +57,33 @@ def team_roster_user_ids(session: Session, team_id: UUID) -> list[str]:
             )
         )
     )
+
+
+@dataclass(frozen=True)
+class RosterMember:
+    user_id: str
+    role: str
+    status: str
+
+
+def team_roster(session: Session, team_id: UUID) -> list[RosterMember]:
+    """Active members' (user_id, role, status), for team detail/roster
+    display. Same reasoning as team_roster_user_ids: a direct query against
+    team_memberships for anyone but the caller collapses to nothing under
+    real RLS (migration 20260817_0009), so Postgres goes through the
+    team_roster() SECURITY DEFINER function (migration 20260823_0017)."""
+    if _is_postgres(session):
+        rows = session.execute(
+            text("SELECT user_id, role, status FROM team_roster(:team_id)"),
+            {"team_id": str(team_id)},
+        ).all()
+    else:
+        rows = session.execute(
+            select(TeamMembership.user_id, TeamMembership.role, TeamMembership.status).where(
+                TeamMembership.team_id == team_id, TeamMembership.status == "active"
+            )
+        ).all()
+    return [RosterMember(user_id=row.user_id, role=row.role, status=row.status) for row in rows]
 
 
 def teammate_user_ids(session: Session, user_id: str) -> list[str]:

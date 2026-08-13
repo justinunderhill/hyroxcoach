@@ -42,3 +42,15 @@ def set_request_user(session: Session, user_id: str) -> None:
             text("SELECT set_config('app.current_user_id', :user_id, true)"),
             {"user_id": user_id},
         )
+
+
+def set_invite_token_lookup(session: Session, token_hash: str) -> None:
+    """Scopes team_invites SELECT/UPDATE to exactly one row for this
+    transaction, for a caller who isn't a team member yet (see migration
+    20260823_0016's docstring: knowing the plaintext token is what proves
+    the right to read/accept that row)."""
+    if session.bind is not None and session.bind.dialect.name == "postgresql":
+        session.execute(
+            text("SELECT set_config('app.lookup_invite_token_hash', :token_hash, true)"),
+            {"token_hash": token_hash},
+        )

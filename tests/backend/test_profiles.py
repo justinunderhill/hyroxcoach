@@ -1,5 +1,6 @@
 import asyncio
 from collections.abc import Generator
+from uuid import uuid4
 
 from httpx import ASGITransport, AsyncClient, Response
 from sqlalchemy import create_engine, select
@@ -9,7 +10,7 @@ from sqlalchemy.pool import StaticPool
 from api.auth import AuthenticatedUser, get_current_user
 from api.database import get_session
 from api.main import app
-from api.models import AthleteProfile, Base, Measurement
+from api.models import AthleteProfile, Base, Measurement, Team, TeamMembership
 
 engine = create_engine(
     "sqlite://",
@@ -93,3 +94,33 @@ def test_profile_reads_are_scoped_to_authenticated_owner() -> None:
 
     assert response.status_code == 200
     assert response.json()["profile"] is None
+
+
+def test_onboarding_does_not_create_a_second_team_after_accepting_an_invite() -> None:
+    """A user who accepted a team invite before finishing onboarding
+    already has an active membership -- PATCH /api/me must not also
+    auto-provision a solo team for them (see api/routers/profiles.py)."""
+    invited_team_id = uuid4()
+    with SessionFactory.begin() as session:
+        session.add(Team(id=invited_team_id, name="Partner's team", created_by="athlete-b"))
+        session.add(
+            TeamMembership(
+                team_id=invited_team_id, user_id="athlete-a", role="athlete", status="active"
+            )
+        )
+
+    response = asyncio.run(
+        api_request(
+            "PATCH",
+            "/api/me",
+            {"display_name": "Athlete A", "timezone": "Africa/Johannesburg"},
+        )
+    )
+
+    assert response.status_code == 200
+    active_teams = response.json()["active_teams"]
+    assert len(active_teams) == 1
+    assert active_teams[0]["id"] == str(invited_team_id)
+
+    with SessionFactory() as session:
+        assert session.scalar(select(Team.id).where(Team.id != invited_team_id)) is None

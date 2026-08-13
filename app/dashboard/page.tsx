@@ -6,6 +6,7 @@ import { GoalEventCard } from "@/components/goal-event-card";
 import { ProfileSummary } from "@/components/profile-summary";
 import { SignOutButton } from "@/components/sign-out-button";
 import { TeamComparison } from "@/components/team-comparison";
+import { TeamInviteCard } from "@/components/team-invite-card";
 import { TeamWeeklyReview } from "@/components/team-weekly-review";
 import { WeeklyReview } from "@/components/weekly-review";
 import { WeeklyStats } from "@/components/weekly-stats";
@@ -58,6 +59,9 @@ export default async function DashboardPage() {
         <section className="mt-6 grid gap-5 md:grid-cols-2">
           <ExerciseProgress />
           <TeamComparison />
+        </section>
+        <section className="mt-6">
+          <TeamInviteCard />
         </section>
         <section className="mt-6 grid gap-5 md:grid-cols-2">
           <WeeklyReview />

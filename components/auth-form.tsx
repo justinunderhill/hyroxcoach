@@ -8,9 +8,10 @@ import { authClient } from "@/lib/auth/client";
 
 type AuthFormProps = {
   mode: "sign-in" | "sign-up";
+  next?: string;
 };
 
-export function AuthForm({ mode }: AuthFormProps) {
+export function AuthForm({ mode, next }: AuthFormProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,7 +38,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         return;
       }
 
-      router.replace(isSignUp ? "/onboarding" : "/dashboard");
+      router.replace(next || (isSignUp ? "/onboarding" : "/dashboard"));
       router.refresh();
     } catch {
       setError("Authentication is temporarily unavailable. Please try again.");
@@ -102,7 +103,10 @@ export function AuthForm({ mode }: AuthFormProps) {
         {isSignUp ? "Already have an account?" : "New to HYROX Coach?"}{" "}
         <Link
           className="font-semibold text-[#506b13] underline decoration-[#a4c72b] underline-offset-4"
-          href={isSignUp ? "/auth/sign-in" : "/auth/sign-up"}
+          href={
+            (isSignUp ? "/auth/sign-in" : "/auth/sign-up") +
+            (next ? `?next=${encodeURIComponent(next)}` : "")
+          }
         >
           {isSignUp ? "Sign in" : "Create one"}
         </Link>

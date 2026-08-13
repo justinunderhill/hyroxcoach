@@ -15,6 +15,7 @@ from api.schemas.profiles import (
     MeTeamResponse,
     ProfileUpdate,
 )
+from api.services.teams import active_team_ids
 
 router = APIRouter(prefix="/api/me", tags=["profiles"])
 CurrentUser = Annotated[AuthenticatedUser, Depends(get_current_user)]
@@ -114,7 +115,10 @@ def update_me(
             )
         )
 
-    if is_new_profile:
+    if is_new_profile and not active_team_ids(session, user.id):
+        # A user who joined a team via invite before finishing onboarding
+        # already has an active membership -- don't also auto-provision a
+        # second, solo team for them.
         team = Team(name=f"{update.display_name}'s team", created_by=user.id)
         session.add(team)
         session.flush()
