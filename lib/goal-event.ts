@@ -10,6 +10,7 @@ export type GoalEvent = {
   location: string | null;
   preparation_start_date: string | null;
   days_until_event: number;
+  is_taper_week: boolean;
   created_at: string;
   updated_at: string;
 };

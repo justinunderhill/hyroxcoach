@@ -213,3 +213,59 @@ def test_add_exercise_performance_is_owner_only() -> None:
 
     detail = asyncio.run(api_request("GET", f"/api/workouts/{workout_id}"))
     assert len(detail.json()["performances"]) == 1
+
+
+def test_is_simulation_flag_round_trips() -> None:
+    make_team(ATHLETE_A.id)
+    as_user(ATHLETE_A)
+    create_response = asyncio.run(
+        api_request("POST", "/api/workouts", workout_payload(is_simulation=True))
+    )
+    assert create_response.json()["is_simulation"] is True
+
+    default_response = asyncio.run(api_request("POST", "/api/workouts", workout_payload()))
+    assert default_response.json()["is_simulation"] is False
+
+
+def test_paired_workout_id_must_be_a_teammates_team_visible_workout() -> None:
+    make_team(ATHLETE_A.id, extra_member_id=ATHLETE_B.id)
+
+    as_user(ATHLETE_B)
+    private_partner_workout = asyncio.run(
+        api_request("POST", "/api/workouts", workout_payload(visibility="private"))
+    ).json()["id"]
+    team_partner_workout = asyncio.run(
+        api_request("POST", "/api/workouts", workout_payload(visibility="team"))
+    ).json()["id"]
+
+    as_user(ATHLETE_A)
+    own_workout = asyncio.run(
+        api_request("POST", "/api/workouts", workout_payload(visibility="team"))
+    ).json()["id"]
+
+    # Cannot pair with a teammate's private workout.
+    rejected = asyncio.run(
+        api_request(
+            "POST",
+            "/api/workouts",
+            workout_payload(paired_workout_id=private_partner_workout),
+        )
+    )
+    assert rejected.status_code == 422
+
+    # Cannot pair with your own workout.
+    rejected_self = asyncio.run(
+        api_request("POST", "/api/workouts", workout_payload(paired_workout_id=own_workout))
+    )
+    assert rejected_self.status_code == 422
+
+    # A teammate's team-visible workout is a valid pairing.
+    accepted = asyncio.run(
+        api_request(
+            "POST",
+            "/api/workouts",
+            workout_payload(visibility="team", paired_workout_id=team_partner_workout),
+        )
+    )
+    assert accepted.status_code == 201
+    assert accepted.json()["paired_workout_id"] == team_partner_workout

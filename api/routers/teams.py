@@ -28,7 +28,14 @@ def _require_membership(session: Session, team_id: UUID, user: AuthenticatedUser
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found.")
 
 
+# Race-week/taper mode: the final 7 days before the event, inclusive of race
+# day itself (PLAN.md Phase 8 "taper/race-week mode"). A fixed, documented
+# window rather than a training-load-derived heuristic.
+TAPER_WINDOW_DAYS = 7
+
+
 def goal_event_response(goal_event: GoalEvent) -> GoalEventResponse:
+    days_until_event = (goal_event.event_date - date.today()).days
     return GoalEventResponse(
         id=goal_event.id,
         team_id=goal_event.team_id,
@@ -38,7 +45,8 @@ def goal_event_response(goal_event: GoalEvent) -> GoalEventResponse:
         division=goal_event.division,
         location=goal_event.location,
         preparation_start_date=goal_event.preparation_start_date,
-        days_until_event=(goal_event.event_date - date.today()).days,
+        days_until_event=days_until_event,
+        is_taper_week=0 <= days_until_event <= TAPER_WINDOW_DAYS,
         created_at=goal_event.created_at,
         updated_at=goal_event.updated_at,
     )

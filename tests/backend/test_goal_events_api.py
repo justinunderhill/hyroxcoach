@@ -1,5 +1,6 @@
 import asyncio
 from collections.abc import Generator
+from datetime import date, timedelta
 from uuid import uuid4
 
 from httpx import ASGITransport, AsyncClient, Response
@@ -123,3 +124,21 @@ def test_non_member_cannot_access_goal_event() -> None:
         api_request("PUT", f"/api/teams/{team_id}/goal-event", GOAL_EVENT_PAYLOAD)
     )
     assert put_response.status_code == 404
+
+
+def test_is_taper_week_true_within_seven_days_of_the_event() -> None:
+    team_id = make_team(ATHLETE_A.id)
+    as_user(ATHLETE_A)
+    soon = (date.today() + timedelta(days=5)).isoformat()
+    near_event = {**GOAL_EVENT_PAYLOAD, "event_date": soon}
+    response = asyncio.run(api_request("PUT", f"/api/teams/{team_id}/goal-event", near_event))
+    assert response.json()["is_taper_week"] is True
+
+
+def test_is_taper_week_false_when_event_is_far_away() -> None:
+    team_id = make_team(ATHLETE_A.id)
+    as_user(ATHLETE_A)
+    later = (date.today() + timedelta(days=60)).isoformat()
+    far_event = {**GOAL_EVENT_PAYLOAD, "event_date": later}
+    response = asyncio.run(api_request("PUT", f"/api/teams/{team_id}/goal-event", far_event))
+    assert response.json()["is_taper_week"] is False

@@ -52,15 +52,51 @@ class PersonalBestResponse(BaseModel):
     is_current: bool
 
 
+class RaceDemandCoverageResponse(BaseModel):
+    trained_weight_pct: float
+    untrained_categories: list[str]
+
+
+class RunningContextResponse(BaseModel):
+    fresh: RunningAnalyticsResponse
+    compromised: RunningAnalyticsResponse
+
+
+class StationSplitResponse(BaseModel):
+    exercise_key: str
+    exercise_name: str
+    duration_seconds: int | None
+    distance_m: float | None
+    notes: str | None
+
+
+class SimulationRecordResponse(BaseModel):
+    workout_id: str
+    occurred_at: datetime
+    total_duration_minutes: int | None
+    station_splits: list[StationSplitResponse]
+
+
+class StationComparisonResponse(BaseModel):
+    exercise_key: str
+    exercise_name: str
+    metric: MetricType | None
+    athlete_bests: dict[str, float]
+    stronger_user_id: str | None
+
+
 class AthleteAnalyticsResponse(BaseModel):
     range_days: int
     generated_at: datetime
     consistency: ConsistencyResponse
     category_coverage: dict[str, int]
+    race_demand_coverage: RaceDemandCoverageResponse
     running: RunningAnalyticsResponse
+    running_by_context: RunningContextResponse
     exercise_progression: list[ExerciseProgressionResponse]
     station_history: list[ExerciseProgressionResponse]
     personal_bests: list[PersonalBestResponse]
+    simulation_history: list[SimulationRecordResponse]
     data_note: str | None = None
 
 
@@ -79,4 +115,7 @@ class TeamAnalyticsResponse(BaseModel):
     athletes: list[TeamAthleteSummary]
     combined_category_coverage: dict[str, int]
     neglected_categories: list[str]
+    station_comparison: list[StationComparisonResponse]
+    shared_station_gaps: list[str]
+    joint_session_count: int
     data_note: str | None = None

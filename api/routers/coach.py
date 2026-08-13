@@ -25,16 +25,20 @@ from api.models import (
 from api.schemas.coach import CoachInsightData, CoachInsightResponse
 from api.services import coach
 from api.services.analytics import (
+    PersonalBest,
     active_days_in_window,
     category_coverage,
     exercise_progression,
+    joint_session_count,
     load_exercise_samples,
     load_samples,
+    load_team_visible_exercise_samples,
     load_team_visible_samples,
     personal_bests,
     running_summary,
     sessions_in_window,
     station_metric_history,
+    team_station_comparison,
 )
 from api.services.cindy import CindyAttempt
 from api.services.cindy import change_from_previous as cindy_change_from_previous
@@ -382,6 +386,7 @@ def _build_team_weekly_context(session: Session, team_id: UUID) -> tuple[dict, d
 
     active_slugs = _active_category_slugs(session)
     samples_by_user = load_team_visible_samples(session, team_id, range_since_utc)
+    exercise_samples_by_user = load_team_visible_exercise_samples(session, team_id, range_since_utc)
     member_ids = team_roster_user_ids(session, team_id)
     display_names = dict(
         session.execute(
@@ -411,12 +416,21 @@ def _build_team_weekly_context(session: Session, team_id: UUID) -> tuple[dict, d
 
     combined_coverage = category_coverage(all_samples, active_slugs, now, WINDOW_DAYS)
 
+    bests_by_user: dict[str, list[PersonalBest]] = {
+        member_id: personal_bests(exercise_samples_by_user.get(member_id, []))
+        for member_id in member_ids
+    }
+    station_comparison, shared_gaps = team_station_comparison(bests_by_user)
+
     context = assemble_team_context(
         TeamContextInputs(
             period=PeriodInfo(scope="team_weekly", start=since_date, end=today),
             target_event=_goal_event_info(session, team_id, today),
             athletes=athlete_inputs,
             combined_category_coverage=combined_coverage,
+            station_comparison=station_comparison,
+            shared_station_gaps=shared_gaps,
+            joint_session_count=joint_session_count(samples_by_user, now, WINDOW_DAYS),
         )
     )
     return context, since_date, today

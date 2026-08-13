@@ -23,7 +23,7 @@ from api.schemas.workouts import (
     WorkoutResponse,
     WorkoutUpdate,
 )
-from api.services.teams import active_team_ids, resolve_primary_team_id
+from api.services.teams import active_team_ids, resolve_primary_team_id, teammate_user_ids
 
 router = APIRouter(prefix="/api", tags=["workouts"])
 CurrentUser = Annotated[AuthenticatedUser, Depends(get_current_user)]
@@ -64,6 +64,32 @@ def category_slugs_by_workout(
     return grouped
 
 
+def resolve_paired_workout_id(
+    session: Session,
+    user: AuthenticatedUser,
+    team_id: UUID,
+    paired_workout_id: UUID | None,
+) -> UUID | None:
+    """A paired workout must belong to a teammate on the same team and be
+    team-visible — pairing must never let a user learn about or reference a
+    teammate's private workout."""
+    if paired_workout_id is None:
+        return None
+    partner_ids = set(teammate_user_ids(session, user.id))
+    paired = session.get(Workout, paired_workout_id)
+    if (
+        paired is None
+        or paired.team_id != team_id
+        or paired.user_id not in partner_ids
+        or paired.visibility != "team"
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="paired_workout_id must reference a teammate's team-visible workout.",
+        )
+    return paired_workout_id
+
+
 def workout_response(
     workout: Workout,
     category_slugs: list[str],
@@ -83,6 +109,8 @@ def workout_response(
         notes=workout.notes,
         visibility=workout.visibility,  # type: ignore[arg-type]
         source=workout.source,  # type: ignore[arg-type]
+        is_simulation=workout.is_simulation,
+        paired_workout_id=workout.paired_workout_id,
         performances=[
             ExercisePerformanceResponse.model_validate(performance)
             for performance in (performances or [])
@@ -150,6 +178,9 @@ def create_workout(
     set_request_user(session, user.id)
     team_id = resolve_primary_team_id(session, user.id)
     category_ids = resolve_category_ids(session, payload.category_slugs)
+    paired_workout_id = resolve_paired_workout_id(
+        session, user, team_id, payload.paired_workout_id
+    )
 
     workout = Workout(
         user_id=user.id,
@@ -163,6 +194,8 @@ def create_workout(
         notes=payload.notes,
         visibility=payload.visibility,
         source=payload.source,
+        is_simulation=payload.is_simulation,
+        paired_workout_id=paired_workout_id,
     )
     session.add(workout)
     session.flush()
@@ -257,6 +290,12 @@ def update_workout(
         workout.notes = payload.notes
     if payload.visibility is not None:
         workout.visibility = payload.visibility
+    if payload.is_simulation is not None:
+        workout.is_simulation = payload.is_simulation
+    if payload.paired_workout_id is not None:
+        workout.paired_workout_id = resolve_paired_workout_id(
+            session, user, workout.team_id, payload.paired_workout_id
+        )
 
     category_slugs: list[str] | None = None
     if payload.category_slugs is not None:

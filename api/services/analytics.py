@@ -34,6 +34,28 @@ STATION_EXERCISE_KEYS = {
     "wall_balls",
 }
 
+STATION_NAMES: dict[str, str] = {
+    "skierg": "SkiErg",
+    "sled_push": "Sled Push",
+    "sled_pull": "Sled Pull",
+    "burpee_broad_jumps": "Burpee Broad Jumps",
+    "row": "Row",
+    "farmers_carry": "Farmers Carry",
+    "sandbag_lunges": "Sandbag Lunges",
+    "wall_balls": "Wall Balls",
+}
+
+# HYROX race-demand weighting (Phase 8): the race itself is 8x1km running
+# segments interspersed with 8 roughly-comparable-duration stations, so
+# running makes up a larger share of total race time than any single
+# station. This is a documented, fixed weighting used only to express what
+# share of *race-relevant* categories a training window actually touched —
+# it is a coverage percentage, not an invented "readiness score" (see
+# DATA_MODEL.md's readiness_snapshots note). Non-race categories (strength,
+# MMA, mobility, recovery, walking) are intentionally excluded; they remain
+# visible via the plain category_coverage() count.
+RACE_DEMAND_WEIGHTS: dict[str, float] = {"running": 2.0} | dict.fromkeys(STATION_NAMES, 1.0)
+
 MetricType = Literal["load_kg", "duration_seconds", "distance_m", "reps"]
 Trend = Literal["improving", "flat", "declining"]
 
@@ -49,6 +71,8 @@ class WorkoutSample:
     distance_km: float | None
     duration_minutes: int | None
     category_slugs: tuple[str, ...] = field(default_factory=tuple)
+    is_simulation: bool = False
+    paired_workout_id: str | None = None
 
 
 def pace_seconds_per_km(duration_minutes: int | None, distance_km: float | None) -> float | None:
@@ -89,6 +113,29 @@ def category_coverage(
             if slug in coverage:
                 coverage[slug] += 1
     return coverage
+
+
+@dataclass(frozen=True)
+class RaceDemandCoverage:
+    trained_weight_pct: float
+    untrained_categories: list[str]
+
+
+def race_demand_coverage(coverage: dict[str, int]) -> RaceDemandCoverage:
+    """What share of race-relevant demand (see RACE_DEMAND_WEIGHTS) was
+    touched at all in the window, plus which race categories saw zero
+    sessions. `coverage` is the output of category_coverage()."""
+    total_weight = sum(RACE_DEMAND_WEIGHTS.values())
+    trained_weight = sum(
+        weight
+        for slug, weight in RACE_DEMAND_WEIGHTS.items()
+        if coverage.get(slug, 0) > 0
+    )
+    untrained = sorted(slug for slug in RACE_DEMAND_WEIGHTS if coverage.get(slug, 0) == 0)
+    return RaceDemandCoverage(
+        trained_weight_pct=round(100 * trained_weight / total_weight, 1) if total_weight else 0.0,
+        untrained_categories=untrained,
+    )
 
 
 @dataclass(frozen=True)
@@ -166,15 +213,45 @@ def running_summary(
 
 
 @dataclass(frozen=True)
+class RunningContextSummary:
+    fresh: RunningSummary
+    compromised: RunningSummary
+
+
+def running_summary_by_context(
+    samples: list[WorkoutSample],
+    now: datetime,
+    range_days: int,
+    recent_limit: int = 10,
+) -> RunningContextSummary:
+    """Splits running by whether it was logged standalone ("fresh") or as
+    part of a workout flagged is_simulation ("compromised" -- run under
+    prior station fatigue, the HYROX-specific signal PLAN.md Phase 8 calls
+    for). Both sides reuse running_summary()'s existing distance_km/
+    duration_minutes fields at the workout level; this does not attempt to
+    isolate individual running splits inside a simulation's
+    exercise_performances rows."""
+    fresh = [sample for sample in samples if not sample.is_simulation]
+    compromised = [sample for sample in samples if sample.is_simulation]
+    return RunningContextSummary(
+        fresh=running_summary(fresh, now, range_days, recent_limit),
+        compromised=running_summary(compromised, now, range_days, recent_limit),
+    )
+
+
+@dataclass(frozen=True)
 class ExercisePerformanceSample:
     id: str
+    workout_id: str
     occurred_at: datetime
     exercise_key: str
     exercise_name: str
+    sequence_no: int
     load_kg: float | None
     reps: int | None
     duration_seconds: int | None
     distance_m: float | None
+    notes: str | None
 
 
 @dataclass(frozen=True)
@@ -275,6 +352,132 @@ def station_metric_history(
 
 
 @dataclass(frozen=True)
+class StationSplit:
+    exercise_key: str
+    exercise_name: str
+    duration_seconds: int | None
+    distance_m: float | None
+    notes: str | None
+
+
+@dataclass(frozen=True)
+class SimulationRecord:
+    workout_id: str
+    occurred_at: datetime
+    total_duration_minutes: int | None
+    station_splits: list[StationSplit]
+
+
+def simulation_history(
+    samples: list[WorkoutSample],
+    exercise_samples: list[ExercisePerformanceSample],
+    recent_limit: int = 10,
+) -> list[SimulationRecord]:
+    """Recent is_simulation-flagged workouts with any logged station splits
+    (exercise_performances rows attached to that workout) -- the "station
+    split notes" and "simulation history" deliverables from PLAN.md Phase 8.
+    Splits are ordered by the sequence they were logged in."""
+    sim_samples = sorted(
+        (sample for sample in samples if sample.is_simulation),
+        key=lambda sample: sample.occurred_at,
+        reverse=True,
+    )[:recent_limit]
+
+    splits_by_workout: dict[str, list[ExercisePerformanceSample]] = {}
+    for perf in exercise_samples:
+        splits_by_workout.setdefault(perf.workout_id, []).append(perf)
+
+    return [
+        SimulationRecord(
+            workout_id=sample.id,
+            occurred_at=sample.occurred_at,
+            total_duration_minutes=sample.duration_minutes,
+            station_splits=[
+                StationSplit(
+                    exercise_key=perf.exercise_key,
+                    exercise_name=perf.exercise_name,
+                    duration_seconds=perf.duration_seconds,
+                    distance_m=perf.distance_m,
+                    notes=perf.notes,
+                )
+                for perf in sorted(
+                    splits_by_workout.get(sample.id, []), key=lambda perf: perf.sequence_no
+                )
+            ],
+        )
+        for sample in sim_samples
+    ]
+
+
+@dataclass(frozen=True)
+class StationComparison:
+    exercise_key: str
+    exercise_name: str
+    metric: MetricType | None
+    athlete_bests: dict[str, float]
+    stronger_user_id: str | None
+
+
+def team_station_comparison(
+    bests_by_user: dict[str, list["PersonalBest"]],
+) -> tuple[list[StationComparison], list[str]]:
+    """Per-station comparison of each athlete's current personal best, plus
+    the list of stations neither athlete has any logged data for at all
+    ("team strengths/gaps" from PLAN.md Phase 8). Only compares athletes on
+    a station when both used the same primary metric; otherwise the values
+    are still shown but `stronger_user_id` is left null rather than guessed."""
+    comparisons: list[StationComparison] = []
+    shared_gaps: list[str] = []
+
+    for exercise_key in sorted(STATION_NAMES):
+        entries: dict[str, PersonalBest] = {}
+        for user_id, bests in bests_by_user.items():
+            match = next((best for best in bests if best.exercise_key == exercise_key), None)
+            if match is not None:
+                entries[user_id] = match
+
+        if not entries:
+            shared_gaps.append(exercise_key)
+            continue
+
+        metrics = {entry.metric for entry in entries.values()}
+        metric = next(iter(metrics)) if len(metrics) == 1 else None
+        stronger_user_id = None
+        if metric is not None and len(entries) > 1:
+            items = [(user_id, entry.best_value) for user_id, entry in entries.items()]
+            stronger_user_id = (
+                min(items, key=lambda item: item[1])[0]
+                if metric in LOWER_IS_BETTER
+                else max(items, key=lambda item: item[1])[0]
+            )
+
+        comparisons.append(
+            StationComparison(
+                exercise_key=exercise_key,
+                exercise_name=STATION_NAMES[exercise_key],
+                metric=metric,
+                athlete_bests={user_id: entry.best_value for user_id, entry in entries.items()},
+                stronger_user_id=stronger_user_id,
+            )
+        )
+
+    return comparisons, shared_gaps
+
+
+def joint_session_count(
+    samples_by_user: dict[str, list[WorkoutSample]], now: datetime, days: int
+) -> int:
+    """Distinct joint sessions (workouts paired via paired_workout_id) in
+    the window, deduplicated so a mutually-linked pair only counts once."""
+    pairs: set[frozenset[str]] = set()
+    for samples in samples_by_user.values():
+        for sample in samples:
+            if sample.paired_workout_id and _within_window(sample, now, days):
+                pairs.add(frozenset({sample.id, sample.paired_workout_id}))
+    return len(pairs)
+
+
+@dataclass(frozen=True)
 class PersonalBest:
     exercise_key: str
     exercise_name: str
@@ -358,7 +561,14 @@ def _as_aware(occurred_at: datetime) -> datetime:
 
 def load_samples(session: Session, user_id: str, since: datetime) -> list[WorkoutSample]:
     rows = session.execute(
-        select(Workout.id, Workout.occurred_at, Workout.distance_km, Workout.duration_minutes)
+        select(
+            Workout.id,
+            Workout.occurred_at,
+            Workout.distance_km,
+            Workout.duration_minutes,
+            Workout.is_simulation,
+            Workout.paired_workout_id,
+        )
         .where(Workout.user_id == user_id, Workout.occurred_at >= since)
         .order_by(Workout.occurred_at.desc())
     ).all()
@@ -371,6 +581,8 @@ def load_samples(session: Session, user_id: str, since: datetime) -> list[Workou
             distance_km=float(row.distance_km) if row.distance_km is not None else None,
             duration_minutes=row.duration_minutes,
             category_slugs=tuple(categories_by_workout.get(str(row.id), [])),
+            is_simulation=row.is_simulation,
+            paired_workout_id=str(row.paired_workout_id) if row.paired_workout_id else None,
         )
         for row in rows
     ]
@@ -382,12 +594,15 @@ def load_exercise_samples(
     rows = session.execute(
         select(
             ExercisePerformance.id,
+            ExercisePerformance.workout_id,
             ExercisePerformance.exercise_name,
             ExercisePerformance.normalized_exercise_key,
+            ExercisePerformance.sequence_no,
             ExercisePerformance.load_kg,
             ExercisePerformance.reps,
             ExercisePerformance.duration_seconds,
             ExercisePerformance.distance_m,
+            ExercisePerformance.notes,
             Workout.occurred_at,
         )
         .join(Workout, Workout.id == ExercisePerformance.workout_id)
@@ -397,16 +612,70 @@ def load_exercise_samples(
     return [
         ExercisePerformanceSample(
             id=str(row.id),
+            workout_id=str(row.workout_id),
             occurred_at=_as_aware(row.occurred_at),
             exercise_key=(row.normalized_exercise_key or row.exercise_name).strip().lower(),
             exercise_name=row.exercise_name,
+            sequence_no=row.sequence_no,
             load_kg=float(row.load_kg) if row.load_kg is not None else None,
             reps=row.reps,
             duration_seconds=row.duration_seconds,
             distance_m=float(row.distance_m) if row.distance_m is not None else None,
+            notes=row.notes,
         )
         for row in rows
     ]
+
+
+def load_team_exercise_samples(
+    session: Session, team_id: UUID, requester_id: str, since: datetime
+) -> dict[str, list[ExercisePerformanceSample]]:
+    """Per-viewer team exercise performances, keyed by owner user_id: the
+    requester's own plus every team-visible workout's performances. Mirrors
+    load_team_samples' explicit visibility filter rather than relying on
+    Postgres RLS alone, since SQLite-backed tests have no RLS to catch a
+    query that forgot it (see hyrox-coach-infra-gotchas memory)."""
+    rows = session.execute(
+        select(
+            ExercisePerformance.id,
+            ExercisePerformance.workout_id,
+            ExercisePerformance.exercise_name,
+            ExercisePerformance.normalized_exercise_key,
+            ExercisePerformance.sequence_no,
+            ExercisePerformance.load_kg,
+            ExercisePerformance.reps,
+            ExercisePerformance.duration_seconds,
+            ExercisePerformance.distance_m,
+            ExercisePerformance.notes,
+            Workout.occurred_at,
+            Workout.user_id,
+        )
+        .join(Workout, Workout.id == ExercisePerformance.workout_id)
+        .where(
+            Workout.team_id == team_id,
+            Workout.occurred_at >= since,
+            (Workout.user_id == requester_id) | (Workout.visibility == "team"),
+        )
+    ).all()
+
+    by_user: dict[str, list[ExercisePerformanceSample]] = {}
+    for row in rows:
+        by_user.setdefault(row.user_id, []).append(
+            ExercisePerformanceSample(
+                id=str(row.id),
+                workout_id=str(row.workout_id),
+                occurred_at=_as_aware(row.occurred_at),
+                exercise_key=(row.normalized_exercise_key or row.exercise_name).strip().lower(),
+                exercise_name=row.exercise_name,
+                sequence_no=row.sequence_no,
+                load_kg=float(row.load_kg) if row.load_kg is not None else None,
+                reps=row.reps,
+                duration_seconds=row.duration_seconds,
+                distance_m=float(row.distance_m) if row.distance_m is not None else None,
+                notes=row.notes,
+            )
+        )
+    return by_user
 
 
 def load_team_samples(
@@ -423,6 +692,8 @@ def load_team_samples(
             Workout.occurred_at,
             Workout.distance_km,
             Workout.duration_minutes,
+            Workout.is_simulation,
+            Workout.paired_workout_id,
         )
         .where(
             Workout.team_id == team_id,
@@ -442,6 +713,58 @@ def load_team_samples(
                 distance_km=float(row.distance_km) if row.distance_km is not None else None,
                 duration_minutes=row.duration_minutes,
                 category_slugs=tuple(categories_by_workout.get(str(row.id), [])),
+                is_simulation=row.is_simulation,
+                paired_workout_id=str(row.paired_workout_id) if row.paired_workout_id else None,
+            )
+        )
+    return by_user
+
+
+def load_team_visible_exercise_samples(
+    session: Session, team_id: UUID, since: datetime
+) -> dict[str, list[ExercisePerformanceSample]]:
+    """Only visibility='team' workouts' performances, for every member,
+    regardless of caller -- the exercise-performance analogue of
+    load_team_visible_samples, for the same reason (content a team_weekly
+    coach insight may persist and either teammate may read later)."""
+    rows = session.execute(
+        select(
+            ExercisePerformance.id,
+            ExercisePerformance.workout_id,
+            ExercisePerformance.exercise_name,
+            ExercisePerformance.normalized_exercise_key,
+            ExercisePerformance.sequence_no,
+            ExercisePerformance.load_kg,
+            ExercisePerformance.reps,
+            ExercisePerformance.duration_seconds,
+            ExercisePerformance.distance_m,
+            ExercisePerformance.notes,
+            Workout.occurred_at,
+            Workout.user_id,
+        )
+        .join(Workout, Workout.id == ExercisePerformance.workout_id)
+        .where(
+            Workout.team_id == team_id,
+            Workout.occurred_at >= since,
+            Workout.visibility == "team",
+        )
+    ).all()
+
+    by_user: dict[str, list[ExercisePerformanceSample]] = {}
+    for row in rows:
+        by_user.setdefault(row.user_id, []).append(
+            ExercisePerformanceSample(
+                id=str(row.id),
+                workout_id=str(row.workout_id),
+                occurred_at=_as_aware(row.occurred_at),
+                exercise_key=(row.normalized_exercise_key or row.exercise_name).strip().lower(),
+                exercise_name=row.exercise_name,
+                sequence_no=row.sequence_no,
+                load_kg=float(row.load_kg) if row.load_kg is not None else None,
+                reps=row.reps,
+                duration_seconds=row.duration_seconds,
+                distance_m=float(row.distance_m) if row.distance_m is not None else None,
+                notes=row.notes,
             )
         )
     return by_user
@@ -461,6 +784,8 @@ def load_team_visible_samples(
             Workout.occurred_at,
             Workout.distance_km,
             Workout.duration_minutes,
+            Workout.is_simulation,
+            Workout.paired_workout_id,
         )
         .where(
             Workout.team_id == team_id,
@@ -480,6 +805,8 @@ def load_team_visible_samples(
                 distance_km=float(row.distance_km) if row.distance_km is not None else None,
                 duration_minutes=row.duration_minutes,
                 category_slugs=tuple(categories_by_workout.get(str(row.id), [])),
+                is_simulation=row.is_simulation,
+                paired_workout_id=str(row.paired_workout_id) if row.paired_workout_id else None,
             )
         )
     return by_user

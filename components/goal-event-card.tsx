@@ -168,6 +168,11 @@ export function GoalEventCard() {
               {[goalEvent.division, goalEvent.location].filter(Boolean).join(" · ")}
             </p>
           ) : null}
+          {goalEvent.is_taper_week ? (
+            <p className="mt-3 rounded-xl bg-[#263711] px-3 py-2 text-xs font-semibold text-[#d8ff62]">
+              Race week — this is taper time. Prioritize freshness over volume.
+            </p>
+          ) : null}
         </>
       ) : (
         <p className="mt-2 text-sm leading-6 text-stone-600">

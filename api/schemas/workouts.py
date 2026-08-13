@@ -63,6 +63,11 @@ class WorkoutCreate(BaseModel):
     visibility: Visibility = "private"
     source: Source = "manual"
     notes: str | None = Field(default=None, max_length=2_000)
+    is_simulation: bool = False
+    paired_workout_id: UUID | None = Field(
+        default=None,
+        description="A teammate's team-visible workout logged for the same joint session.",
+    )
 
     @field_validator("title", "activity_type", "notes")
     @classmethod
@@ -89,6 +94,8 @@ class WorkoutUpdate(BaseModel):
     rpe: int | None = Field(default=None, ge=1, le=10)
     visibility: Visibility | None = None
     notes: str | None = Field(default=None, max_length=2_000)
+    is_simulation: bool | None = None
+    paired_workout_id: UUID | None = None
 
     @field_validator("title", "activity_type", "notes")
     @classmethod
@@ -112,6 +119,8 @@ class WorkoutResponse(BaseModel):
     notes: str | None
     visibility: Visibility
     source: Source
+    is_simulation: bool
+    paired_workout_id: UUID | None
     performances: list[ExercisePerformanceResponse] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime

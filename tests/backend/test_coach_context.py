@@ -61,8 +61,27 @@ def test_target_event_countdown_is_passed_through() -> None:
         "event_date": "2026-11-01",
         "days_until_event": 73,
         "division": "Open",
+        "is_taper_week": False,
     }
     assert "No target event configured yet." not in context["data_quality"]["notes"]
+
+
+def test_target_event_is_taper_week_within_seven_days() -> None:
+    target = TargetEventInfo(
+        name="HYROX Doubles London",
+        event_date=date(2026, 11, 1),
+        days_until_event=7,
+        division="Open",
+    )
+    assert target.is_taper_week is True
+
+    past_target = TargetEventInfo(
+        name="HYROX Doubles London",
+        event_date=date(2026, 11, 1),
+        days_until_event=-1,
+        division="Open",
+    )
+    assert past_target.is_taper_week is False
 
 
 def test_optional_sections_are_none_when_not_supplied() -> None:

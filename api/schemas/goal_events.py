@@ -33,5 +33,6 @@ class GoalEventResponse(BaseModel):
     location: str | None
     preparation_start_date: date | None
     days_until_event: int
+    is_taper_week: bool
     created_at: datetime
     updated_at: datetime

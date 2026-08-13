@@ -192,6 +192,10 @@ class Workout(Base):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     visibility: Mapped[str] = mapped_column(String(16), default="private")
     source: Mapped[str] = mapped_column(String(16), default="manual")
+    is_simulation: Mapped[bool] = mapped_column(Boolean, default=False)
+    paired_workout_id: Mapped[UUID | None] = mapped_column(
+        Uuid, ForeignKey("workouts.id", ondelete="SET NULL"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

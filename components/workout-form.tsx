@@ -1,10 +1,61 @@
 "use client";
 
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 
-import { authenticatedFetch } from "@/lib/auth/client";
+import { authClient, authenticatedFetch } from "@/lib/auth/client";
 import { confirmExtraction, linkMedia } from "@/lib/media";
 import { ScreenshotImport } from "@/components/screenshot-import";
+
+type PartnerWorkoutOption = {
+  id: string;
+  title: string;
+  occurred_at: string;
+};
+
+function usePartnerWorkoutOptions(): PartnerWorkoutOption[] {
+  const { data: session } = authClient.useSession();
+  const [options, setOptions] = useState<PartnerWorkoutOption[]>([]);
+
+  useEffect(() => {
+    const selfId = session?.user?.id;
+    if (!selfId) return;
+    const controller = new AbortController();
+
+    void authenticatedFetch("/api/me", { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error();
+        const me = await response.json();
+        const teamId: string | undefined = me.active_teams?.[0]?.id;
+        if (!teamId) return;
+        const analyticsResponse = await authenticatedFetch(`/api/analytics/team/${teamId}`, {
+          signal: controller.signal,
+        });
+        if (!analyticsResponse.ok) throw new Error();
+        const analytics: { athletes: { user_id: string }[] } = await analyticsResponse.json();
+        const partnerId = analytics.athletes.find((athlete) => athlete.user_id !== selfId)?.user_id;
+        if (!partnerId) return;
+        const workoutsResponse = await authenticatedFetch(
+          `/api/workouts?athlete=${partnerId}&limit=15`,
+          { signal: controller.signal },
+        );
+        if (!workoutsResponse.ok) throw new Error();
+        const workouts: { id: string; title: string; occurred_at: string; visibility: string }[] =
+          await workoutsResponse.json();
+        setOptions(
+          workouts
+            .filter((workout) => workout.visibility === "team")
+            .map((workout) => ({ id: workout.id, title: workout.title, occurred_at: workout.occurred_at })),
+        );
+      })
+      .catch(() => {
+        // Partner picker is a convenience; failing silently just leaves it empty.
+      });
+
+    return () => controller.abort();
+  }, [session?.user?.id]);
+
+  return options;
+}
 
 const categories = [
   { slug: "running", label: "Running" },
@@ -50,6 +101,7 @@ type WorkoutFormProps = {
 export function WorkoutForm({ onLogged }: WorkoutFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const partnerWorkoutOptions = usePartnerWorkoutOptions();
   const titleRef = useRef<HTMLInputElement>(null);
   const distanceRef = useRef<HTMLInputElement>(null);
   const durationRef = useRef<HTMLInputElement>(null);
@@ -103,6 +155,8 @@ export function WorkoutForm({ onLogged }: WorkoutFormProps) {
       visibility: String(data.get("visibility") ?? "team"),
       source: usedExtraction ? "image" : "manual",
       notes: String(data.get("notes") ?? "").trim() || null,
+      is_simulation: data.get("isSimulation") === "on",
+      paired_workout_id: data.get("pairedWorkoutId") || null,
     };
 
     try {
@@ -267,6 +321,29 @@ export function WorkoutForm({ onLogged }: WorkoutFormProps) {
           </label>
         </div>
       </fieldset>
+
+      <label className="flex min-h-11 items-center gap-2 rounded-xl border border-stone-200 bg-[#fafaf7] px-3 text-sm text-stone-700">
+        <input className="size-4 accent-[#789416]" name="isSimulation" type="checkbox" />
+        This was a HYROX simulation
+      </label>
+
+      {partnerWorkoutOptions.length > 0 ? (
+        <label className="block text-sm font-semibold text-stone-700">
+          Trained together with partner? <span className="font-normal text-stone-400">(optional)</span>
+          <select
+            className="mt-2 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base outline-none focus:border-[#789416] focus:ring-4 focus:ring-[#d8ff62]/30"
+            defaultValue=""
+            name="pairedWorkoutId"
+          >
+            <option value="">Not a joint session</option>
+            {partnerWorkoutOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.title} — {new Date(option.occurred_at).toLocaleDateString()}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
 
       <label className="block text-sm font-semibold text-stone-700">
         Notes <span className="font-normal text-stone-400">(optional)</span>

@@ -7,11 +7,17 @@ import { authenticatedFetch } from "@/lib/auth/client";
 type Analytics = {
   consistency: { sessions_last_7_days: number; active_days_last_7_days: number };
   category_coverage: Record<string, number>;
+  race_demand_coverage: { trained_weight_pct: number; untrained_categories: string[] };
   running: {
     weekly_distance_km: number;
     avg_pace_seconds_per_km: number | null;
     best_5k_seconds: number | null;
   };
+  simulation_history: {
+    workout_id: string;
+    occurred_at: string;
+    total_duration_minutes: number | null;
+  }[];
   data_note: string | null;
 };
 
@@ -86,6 +92,21 @@ export function WeeklyStats() {
         Avg pace {formatPace(analytics.running.avg_pace_seconds_per_km)}
         {analytics.running.best_5k_seconds ? ` · Best 5 km ${formatDuration(analytics.running.best_5k_seconds)}` : ""}
       </p>
+      <p className="mt-2 text-xs text-stone-500">
+        Race-demand coverage: {analytics.race_demand_coverage.trained_weight_pct}% of running +
+        stations trained this window.
+      </p>
+      {analytics.simulation_history.length > 0 ? (
+        <p className="mt-1 text-xs text-stone-500">
+          {analytics.simulation_history.length} HYROX simulation
+          {analytics.simulation_history.length === 1 ? "" : "s"} logged, most recent{" "}
+          {new Date(analytics.simulation_history[0].occurred_at).toLocaleDateString()}
+          {analytics.simulation_history[0].total_duration_minutes
+            ? ` (${analytics.simulation_history[0].total_duration_minutes} min)`
+            : ""}
+          .
+        </p>
+      ) : null}
       {analytics.data_note ? <p className="mt-2 text-xs text-stone-400">{analytics.data_note}</p> : null}
     </div>
   );

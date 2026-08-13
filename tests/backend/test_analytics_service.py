@@ -2,15 +2,21 @@ from datetime import UTC, datetime, timedelta
 
 from api.services.analytics import (
     ExercisePerformanceSample,
+    PersonalBest,
     WorkoutSample,
     active_days_in_window,
     category_coverage,
     exercise_progression,
+    joint_session_count,
     pace_seconds_per_km,
     personal_bests,
+    race_demand_coverage,
     running_summary,
+    running_summary_by_context,
     sessions_in_window,
+    simulation_history,
     station_metric_history,
+    team_station_comparison,
 )
 
 NOW = datetime(2026, 8, 12, 12, 0, tzinfo=UTC)
@@ -21,13 +27,18 @@ def sample(
     distance_km: float | None = None,
     duration_minutes: int | None = None,
     categories: tuple[str, ...] = (),
+    workout_id: str | None = None,
+    is_simulation: bool = False,
+    paired_workout_id: str | None = None,
 ) -> WorkoutSample:
     return WorkoutSample(
-        id=f"w-{days_ago}",
+        id=workout_id or f"w-{days_ago}",
         occurred_at=NOW - timedelta(days=days_ago),
         distance_km=distance_km,
         duration_minutes=duration_minutes,
         category_slugs=categories,
+        is_simulation=is_simulation,
+        paired_workout_id=paired_workout_id,
     )
 
 
@@ -39,16 +50,22 @@ def exercise_sample(
     reps: int | None = None,
     duration_seconds: int | None = None,
     distance_m: float | None = None,
+    workout_id: str = "w-1",
+    sequence_no: int = 1,
+    notes: str | None = None,
 ) -> ExercisePerformanceSample:
     return ExercisePerformanceSample(
         id=f"perf-{exercise_key}-{days_ago}",
+        workout_id=workout_id,
         occurred_at=NOW - timedelta(days=days_ago),
         exercise_key=exercise_key,
         exercise_name=exercise_name,
+        sequence_no=sequence_no,
         load_kg=load_kg,
         reps=reps,
         duration_seconds=duration_seconds,
         distance_m=distance_m,
+        notes=notes,
     )
 
 
@@ -183,3 +200,97 @@ def test_personal_bests_is_current_false_when_pb_is_stale() -> None:
     best = bests[0]
     assert best.best_value == 100
     assert best.is_current is False
+
+
+def test_race_demand_coverage_weights_running_double_a_station() -> None:
+    coverage = {"running": 3, "skierg": 1, "sled_push": 0, "strength": 5}
+    result = race_demand_coverage(coverage)
+    # running(2) + skierg(1) trained out of total 10 (running=2 + 8 stations=8).
+    assert result.trained_weight_pct == 30.0
+    assert "sled_push" in result.untrained_categories
+    assert "strength" not in result.untrained_categories  # not a race category at all
+
+
+def test_race_demand_coverage_full_when_all_race_categories_trained() -> None:
+    coverage = {"running": 1, **{station: 1 for station in station_slugs()}}
+    result = race_demand_coverage(coverage)
+    assert result.trained_weight_pct == 100.0
+    assert result.untrained_categories == []
+
+
+def station_slugs() -> list[str]:
+    return [
+        "skierg",
+        "sled_push",
+        "sled_pull",
+        "burpee_broad_jumps",
+        "row",
+        "farmers_carry",
+        "sandbag_lunges",
+        "wall_balls",
+    ]
+
+
+def test_running_summary_by_context_splits_fresh_and_compromised() -> None:
+    samples = [
+        sample(2, distance_km=5.0, duration_minutes=25, is_simulation=False),
+        sample(3, distance_km=3.0, duration_minutes=20, is_simulation=True),
+    ]
+    result = running_summary_by_context(samples, NOW, range_days=28)
+    assert result.fresh.weekly_distance_km == 5.0
+    assert result.compromised.weekly_distance_km == 3.0
+
+
+def test_simulation_history_includes_station_splits_ordered() -> None:
+    sim = sample(1, duration_minutes=75, is_simulation=True, workout_id="sim-1")
+    non_sim = sample(2, duration_minutes=30, is_simulation=False, workout_id="w-plain")
+    splits = [
+        exercise_sample(
+            1, exercise_key="wall_balls", workout_id="sim-1", sequence_no=2, notes="tough"
+        ),
+        exercise_sample(1, exercise_key="skierg", workout_id="sim-1", sequence_no=1),
+        exercise_sample(2, exercise_key="skierg", workout_id="w-plain", sequence_no=1),
+    ]
+    history = simulation_history([sim, non_sim], splits)
+    assert len(history) == 1
+    record = history[0]
+    assert record.workout_id == "sim-1"
+    assert [split.exercise_key for split in record.station_splits] == ["skierg", "wall_balls"]
+    assert record.station_splits[1].notes == "tough"
+
+
+def test_team_station_comparison_flags_stronger_athlete_and_shared_gaps() -> None:
+    bests_by_user = {
+        "athlete-a": [
+            PersonalBest(
+                exercise_key="sled_push",
+                exercise_name="Sled Push",
+                metric="duration_seconds",
+                best_value=60,
+                achieved_at=NOW,
+                is_current=True,
+            )
+        ],
+        "athlete-b": [
+            PersonalBest(
+                exercise_key="sled_push",
+                exercise_name="Sled Push",
+                metric="duration_seconds",
+                best_value=75,
+                achieved_at=NOW,
+                is_current=True,
+            )
+        ],
+    }
+    comparisons, gaps = team_station_comparison(bests_by_user)
+    sled_push = next(item for item in comparisons if item.exercise_key == "sled_push")
+    assert sled_push.stronger_user_id == "athlete-a"  # lower duration wins
+    assert "skierg" in gaps  # neither athlete has any skierg data
+
+
+def test_joint_session_count_deduplicates_mutual_pairs() -> None:
+    samples_by_user = {
+        "athlete-a": [sample(1, workout_id="a-1", paired_workout_id="b-1")],
+        "athlete-b": [sample(1, workout_id="b-1", paired_workout_id="a-1")],
+    }
+    assert joint_session_count(samples_by_user, NOW, days=7) == 1

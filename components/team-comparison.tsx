@@ -12,9 +12,20 @@ type TeamAthlete = {
   category_coverage: Record<string, number>;
 };
 
+type StationComparison = {
+  exercise_key: string;
+  exercise_name: string;
+  metric: string | null;
+  athlete_bests: Record<string, number>;
+  stronger_user_id: string | null;
+};
+
 type TeamAnalytics = {
   athletes: TeamAthlete[];
   neglected_categories: string[];
+  station_comparison: StationComparison[];
+  shared_station_gaps: string[];
+  joint_session_count: number;
   data_note: string | null;
 };
 
@@ -62,8 +73,17 @@ export function TeamComparison() {
   if (state.status === "loading") return <div className="h-40 animate-pulse rounded-3xl bg-stone-100" />;
   if (state.status === "error" || state.status === "empty") return null;
 
-  const { athletes, neglected_categories, data_note } = state.analytics;
+  const {
+    athletes,
+    neglected_categories,
+    station_comparison,
+    shared_station_gaps,
+    joint_session_count,
+    data_note,
+  } = state.analytics;
   if (athletes.length < 2) return null;
+
+  const nameByUserId = Object.fromEntries(athletes.map((athlete) => [athlete.user_id, athlete.display_name]));
 
   return (
     <div className="rounded-3xl border border-stone-200 bg-white p-6">
@@ -80,9 +100,35 @@ export function TeamComparison() {
           </div>
         ))}
       </div>
+      <p className="mt-4 text-xs text-stone-500">
+        {joint_session_count} joint session{joint_session_count === 1 ? "" : "s"} trained together
+        this period.
+      </p>
+      {station_comparison.length > 0 ? (
+        <div className="mt-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">
+            Station strengths
+          </p>
+          <ul className="mt-2 space-y-1 text-sm text-stone-600">
+            {station_comparison.map((station) => (
+              <li key={station.exercise_key}>
+                {station.exercise_name}:{" "}
+                {station.stronger_user_id
+                  ? `${nameByUserId[station.stronger_user_id] ?? "Athlete"} currently leads`
+                  : "not enough shared data to compare yet"}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       {neglected_categories.length > 0 ? (
         <p className="mt-4 text-sm text-stone-600">
           Neglected together: {neglected_categories.map(formatCategory).join(", ")}
+        </p>
+      ) : null}
+      {shared_station_gaps.length > 0 ? (
+        <p className="mt-2 text-sm text-stone-600">
+          Neither of you has logged: {shared_station_gaps.map(formatCategory).join(", ")}
         </p>
       ) : null}
       {data_note ? <p className="mt-2 text-xs text-stone-400">{data_note}</p> : null}

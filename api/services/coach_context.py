@@ -17,8 +17,18 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Any
 
-from api.services.analytics import ExerciseProgression, PersonalBest, RunningSummary
+from api.services.analytics import (
+    ExerciseProgression,
+    PersonalBest,
+    RunningSummary,
+    StationComparison,
+)
 from api.services.cindy import AttemptChange, CindyAttempt
+
+# Race-week/taper mode window, mirrored from api/routers/teams.py's
+# TAPER_WINDOW_DAYS -- kept in sync manually since this module must stay
+# import-free of the router layer (pure/testable, per module docstring).
+TAPER_WINDOW_DAYS = 7
 
 
 @dataclass(frozen=True)
@@ -34,6 +44,10 @@ class TargetEventInfo:
     event_date: date
     days_until_event: int
     division: str | None
+
+    @property
+    def is_taper_week(self) -> bool:
+        return 0 <= self.days_until_event <= TAPER_WINDOW_DAYS
 
 
 @dataclass(frozen=True)
@@ -83,6 +97,17 @@ def _target_event_dict(target_event: TargetEventInfo | None) -> dict[str, Any] |
         "event_date": target_event.event_date.isoformat(),
         "days_until_event": target_event.days_until_event,
         "division": target_event.division,
+        "is_taper_week": target_event.is_taper_week,
+    }
+
+
+def _station_comparison_dict(comparison: StationComparison) -> dict[str, Any]:
+    return {
+        "exercise_key": comparison.exercise_key,
+        "exercise_name": comparison.exercise_name,
+        "metric": comparison.metric,
+        "athlete_bests": comparison.athlete_bests,
+        "stronger_user_id": comparison.stronger_user_id,
     }
 
 
@@ -243,6 +268,9 @@ class TeamContextInputs:
     target_event: TargetEventInfo | None
     athletes: list[TeamAthleteSummaryInputs] = field(default_factory=list)
     combined_category_coverage: dict[str, int] = field(default_factory=dict)
+    station_comparison: list[StationComparison] = field(default_factory=list)
+    shared_station_gaps: list[str] = field(default_factory=list)
+    joint_session_count: int = 0
 
 
 def assemble_team_context(inputs: TeamContextInputs) -> dict[str, Any]:
@@ -259,6 +287,8 @@ def assemble_team_context(inputs: TeamContextInputs) -> dict[str, Any]:
         notes.append("No target event configured yet.")
     if len(inputs.athletes) < 2:
         notes.append("Only one athlete has team-visible activity this period.")
+    if inputs.joint_session_count == 0:
+        notes.append("No joint sessions logged together this period.")
 
     return {
         "target_event": _target_event_dict(inputs.target_event),
@@ -274,5 +304,12 @@ def assemble_team_context(inputs: TeamContextInputs) -> dict[str, Any]:
         ],
         "combined_category_coverage": inputs.combined_category_coverage,
         "neglected_categories": neglected,
+        "team_comparison": {
+            "station_comparison": [
+                _station_comparison_dict(item) for item in inputs.station_comparison
+            ],
+            "shared_station_gaps": inputs.shared_station_gaps,
+            "joint_session_count": inputs.joint_session_count,
+        },
         "data_quality": {"notes": notes},
     }
