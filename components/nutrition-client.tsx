@@ -11,7 +11,7 @@ export function NutritionClient() {
   return (
     <div className="space-y-8">
       <DailyNutritionCard ref={dailyRef} />
-      <div className="rounded-3xl border border-stone-200 bg-white p-6">
+      <div className="rounded-3xl border border-line bg-surface p-6">
         <NutritionTargetForm onSaved={() => dailyRef.current?.refresh()} />
       </div>
     </div>

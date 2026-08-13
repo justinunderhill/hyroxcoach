@@ -13,12 +13,6 @@ type State =
   | { status: "editing"; teamId: string; goalEvent: GoalEvent | null }
   | { status: "error"; teamId: string; message: string };
 
-function daysUntilLabel(days: number): string {
-  if (days < 0) return `${Math.abs(days)} days ago`;
-  if (days === 0) return "Today";
-  return `${days} days to go`;
-}
-
 export function GoalEventCard() {
   const [state, setState] = useState<State>({ status: "loading-team" });
   const [error, setError] = useState<string | null>(null);
@@ -74,19 +68,19 @@ export function GoalEventCard() {
 
   if (state.status === "loading-team" || state.status === "no-team") return null;
   if (state.status === "loading") {
-    return <div className="h-28 animate-pulse rounded-3xl bg-stone-100" />;
+    return <div className="h-28 animate-pulse rounded-3xl bg-surface-2" />;
   }
 
   if (state.status === "editing") {
     const goalEvent = state.goalEvent;
     return (
-      <div className="rounded-3xl border border-[#dbe998] bg-[#f8ffe4] p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">Target event</p>
+      <div className="rounded-3xl border border-lime/30 bg-lime/10 p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Target event</p>
         <form className="mt-3 space-y-3" onSubmit={handleSubmit}>
-          <label className="block text-sm font-semibold text-[#263711]">
+          <label className="block text-sm font-semibold text-ink">
             Event name
             <input
-              className="mt-1 min-h-11 w-full rounded-xl border border-[#c7dd7a] px-3 text-sm"
+              className="mt-1 min-h-11 w-full rounded-xl border border-lime/30 px-3 text-sm"
               defaultValue={goalEvent?.name}
               maxLength={120}
               name="name"
@@ -95,20 +89,20 @@ export function GoalEventCard() {
             />
           </label>
           <div className="grid grid-cols-2 gap-3">
-            <label className="block text-xs font-semibold text-[#567118]">
+            <label className="block text-xs font-semibold text-lime">
               Race date
               <input
-                className="mt-1 min-h-11 w-full rounded-xl border border-[#c7dd7a] px-3 text-sm"
+                className="mt-1 min-h-11 w-full rounded-xl border border-lime/30 px-3 text-sm"
                 defaultValue={goalEvent?.event_date}
                 name="eventDate"
                 required
                 type="date"
               />
             </label>
-            <label className="block text-xs font-semibold text-[#567118]">
+            <label className="block text-xs font-semibold text-lime">
               Division
               <input
-                className="mt-1 min-h-11 w-full rounded-xl border border-[#c7dd7a] px-3 text-sm"
+                className="mt-1 min-h-11 w-full rounded-xl border border-lime/30 px-3 text-sm"
                 defaultValue={goalEvent?.division ?? ""}
                 maxLength={80}
                 name="division"
@@ -116,26 +110,26 @@ export function GoalEventCard() {
               />
             </label>
           </div>
-          <label className="block text-xs font-semibold text-[#567118]">
-            Location <span className="font-normal text-stone-400">(optional)</span>
+          <label className="block text-xs font-semibold text-lime">
+            Location <span className="font-normal text-faint">(optional)</span>
             <input
-              className="mt-1 min-h-11 w-full rounded-xl border border-[#c7dd7a] px-3 text-sm"
+              className="mt-1 min-h-11 w-full rounded-xl border border-lime/30 px-3 text-sm"
               defaultValue={goalEvent?.location ?? ""}
               maxLength={120}
               name="location"
             />
           </label>
-          {error ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-800">{error}</p> : null}
+          {error ? <p className="rounded-xl bg-red/10 px-3 py-2 text-xs text-red">{error}</p> : null}
           <div className="flex gap-2">
             <button
-              className="min-h-10 rounded-xl bg-[#15271e] px-4 text-xs font-bold text-white disabled:opacity-60"
+              className="min-h-10 rounded-xl bg-lime px-4 text-xs font-bold text-lime-ink disabled:opacity-60"
               disabled={isSubmitting}
               type="submit"
             >
               {isSubmitting ? "Saving…" : "Save target event"}
             </button>
             <button
-              className="min-h-10 rounded-xl border border-[#263711]/20 px-4 text-xs font-semibold text-[#263711]"
+              className="min-h-10 rounded-xl border border-line-strong px-4 text-xs font-semibold text-ink"
               onClick={() => setState({ status: "ready", teamId: state.teamId, goalEvent })}
               type="button"
             >
@@ -148,43 +142,58 @@ export function GoalEventCard() {
   }
 
   if (state.status === "error") {
-    return <p className="rounded-3xl bg-rose-50 p-6 text-sm text-rose-800">{state.message}</p>;
+    return <p className="rounded-3xl bg-red/10 p-6 text-sm text-red">{state.message}</p>;
   }
 
   const { goalEvent, teamId } = state;
 
-  return (
-    <div className="rounded-3xl border border-[#dbe998] bg-[#f8ffe4] p-6">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">Target event</p>
-      {goalEvent ? (
-        <>
-          <h3 className="mt-2 text-xl font-semibold text-[#263711]">{goalEvent.name}</h3>
-          <p className="mt-1 text-sm text-[#567118]">
-            {new Date(goalEvent.event_date).toLocaleDateString(undefined, { dateStyle: "long" })} ·{" "}
-            {daysUntilLabel(goalEvent.days_until_event)}
+  if (goalEvent) {
+    return (
+      <div className="rounded-3xl border border-lime/20 bg-gradient-to-br from-lime/10 to-surface p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">{goalEvent.name}</p>
+            <p className="mt-1 font-mono text-5xl font-black tabular-nums leading-none text-lime sm:text-6xl">
+              {Math.abs(goalEvent.days_until_event)}
+            </p>
+            <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-muted">
+              {goalEvent.days_until_event < 0 ? "days ago" : goalEvent.days_until_event === 0 ? "race day" : "days to race"}
+            </p>
+          </div>
+          <button
+            className="min-h-9 shrink-0 rounded-xl border border-line-strong px-3 text-xs font-semibold text-ink"
+            onClick={() => setState({ status: "editing", teamId, goalEvent })}
+            type="button"
+          >
+            Edit
+          </button>
+        </div>
+        {goalEvent.division || goalEvent.location ? (
+          <p className="mt-3 text-xs text-muted">
+            {[goalEvent.division, goalEvent.location].filter(Boolean).join(" · ")}
           </p>
-          {goalEvent.division || goalEvent.location ? (
-            <p className="mt-1 text-xs text-stone-500">
-              {[goalEvent.division, goalEvent.location].filter(Boolean).join(" · ")}
-            </p>
-          ) : null}
-          {goalEvent.is_taper_week ? (
-            <p className="mt-3 rounded-xl bg-[#263711] px-3 py-2 text-xs font-semibold text-[#d8ff62]">
-              Race week — this is taper time. Prioritize freshness over volume.
-            </p>
-          ) : null}
-        </>
-      ) : (
-        <p className="mt-2 text-sm leading-6 text-stone-600">
-          No target race set yet. Add one so the coach can talk about race countdown.
-        </p>
-      )}
+        ) : null}
+        {goalEvent.is_taper_week ? (
+          <p className="mt-3 rounded-xl bg-surface-2 px-3 py-2 text-xs font-semibold text-lime">
+            Race week — this is taper time. Prioritize freshness over volume.
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-3xl border border-lime/30 bg-lime/10 p-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Target event</p>
+      <p className="mt-2 text-sm leading-6 text-muted">
+        No target race set yet. Add one so the coach can talk about race countdown.
+      </p>
       <button
-        className="mt-4 min-h-9 rounded-xl border border-[#263711]/20 px-3 text-xs font-semibold text-[#263711]"
+        className="mt-4 min-h-9 rounded-xl border border-line-strong px-3 text-xs font-semibold text-ink"
         onClick={() => setState({ status: "editing", teamId, goalEvent })}
         type="button"
       >
-        {goalEvent ? "Edit target event" : "Set target event"}
+        Set target event
       </button>
     </div>
   );

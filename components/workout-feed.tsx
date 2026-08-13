@@ -95,28 +95,28 @@ function EditWorkoutForm({ workout, onCancel, onSaved }: EditWorkoutFormProps) {
   }
 
   return (
-    <div className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-[#fafaf7] p-3">
-      <label className="block text-xs font-semibold text-stone-600">
+    <div className="mt-3 space-y-3 rounded-xl border border-line bg-surface-2 p-3">
+      <label className="block text-xs font-semibold text-muted">
         Title
         <input
-          className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+          className="mt-1 min-h-11 w-full rounded-xl border border-line-strong px-3 text-sm"
           onChange={(event) => setTitle(event.target.value)}
           value={title}
         />
       </label>
       <div className="grid grid-cols-2 gap-3">
-        <label className="block text-xs font-semibold text-stone-600">
+        <label className="block text-xs font-semibold text-muted">
           Activity type
           <input
-            className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+            className="mt-1 min-h-11 w-full rounded-xl border border-line-strong px-3 text-sm"
             onChange={(event) => setActivityType(event.target.value)}
             value={activityType}
           />
         </label>
-        <label className="block text-xs font-semibold text-stone-600">
+        <label className="block text-xs font-semibold text-muted">
           When
           <input
-            className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+            className="mt-1 min-h-11 w-full rounded-xl border border-line-strong px-3 text-sm"
             onChange={(event) => setOccurredAt(event.target.value)}
             type="datetime-local"
             value={occurredAt}
@@ -124,29 +124,29 @@ function EditWorkoutForm({ workout, onCancel, onSaved }: EditWorkoutFormProps) {
         </label>
       </div>
       <div className="grid grid-cols-3 gap-3">
-        <label className="block text-xs font-semibold text-stone-600">
+        <label className="block text-xs font-semibold text-muted">
           Minutes
           <input
-            className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+            className="mt-1 min-h-11 w-full rounded-xl border border-line-strong px-3 text-sm"
             onChange={(event) => setDurationMinutes(event.target.value)}
             type="number"
             value={durationMinutes}
           />
         </label>
-        <label className="block text-xs font-semibold text-stone-600">
+        <label className="block text-xs font-semibold text-muted">
           Distance, km
           <input
-            className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+            className="mt-1 min-h-11 w-full rounded-xl border border-line-strong px-3 text-sm"
             onChange={(event) => setDistanceKm(event.target.value)}
             step="0.01"
             type="number"
             value={distanceKm}
           />
         </label>
-        <label className="block text-xs font-semibold text-stone-600">
+        <label className="block text-xs font-semibold text-muted">
           RPE
           <input
-            className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+            className="mt-1 min-h-11 w-full rounded-xl border border-line-strong px-3 text-sm"
             max={10}
             min={1}
             onChange={(event) => setRpe(event.target.value)}
@@ -155,18 +155,18 @@ function EditWorkoutForm({ workout, onCancel, onSaved }: EditWorkoutFormProps) {
           />
         </label>
       </div>
-      <label className="block text-xs font-semibold text-stone-600">
+      <label className="block text-xs font-semibold text-muted">
         Notes
         <textarea
-          className="mt-1 min-h-16 w-full rounded-xl border border-stone-300 px-3 py-2 text-sm"
+          className="mt-1 min-h-16 w-full rounded-xl border border-line-strong px-3 py-2 text-sm"
           onChange={(event) => setNotes(event.target.value)}
           value={notes}
         />
       </label>
       <fieldset>
-        <legend className="text-xs font-semibold text-stone-600">Visibility</legend>
+        <legend className="text-xs font-semibold text-muted">Visibility</legend>
         <div className="mt-1 flex gap-3">
-          <label className="flex items-center gap-1.5 text-xs text-stone-700">
+          <label className="flex items-center gap-1.5 text-xs text-ink">
             <input
               checked={visibility === "team"}
               onChange={() => setVisibility("team")}
@@ -174,7 +174,7 @@ function EditWorkoutForm({ workout, onCancel, onSaved }: EditWorkoutFormProps) {
             />
             Team
           </label>
-          <label className="flex items-center gap-1.5 text-xs text-stone-700">
+          <label className="flex items-center gap-1.5 text-xs text-ink">
             <input
               checked={visibility === "private"}
               onChange={() => setVisibility("private")}
@@ -184,10 +184,10 @@ function EditWorkoutForm({ workout, onCancel, onSaved }: EditWorkoutFormProps) {
           </label>
         </div>
       </fieldset>
-      {error ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-800">{error}</p> : null}
+      {error ? <p className="rounded-xl bg-red/10 px-3 py-2 text-xs text-red">{error}</p> : null}
       <div className="flex gap-2">
         <button
-          className="min-h-10 flex-1 rounded-xl bg-[#15271e] text-xs font-bold text-white disabled:cursor-wait disabled:opacity-60"
+          className="min-h-10 flex-1 rounded-xl bg-lime text-xs font-bold text-lime-ink disabled:cursor-wait disabled:opacity-60"
           disabled={isSaving}
           onClick={handleSave}
           type="button"
@@ -195,7 +195,7 @@ function EditWorkoutForm({ workout, onCancel, onSaved }: EditWorkoutFormProps) {
           {isSaving ? "Saving…" : "Save changes"}
         </button>
         <button
-          className="min-h-10 rounded-xl border border-stone-300 px-4 text-xs font-semibold text-stone-700"
+          className="min-h-10 rounded-xl border border-line-strong px-4 text-xs font-semibold text-ink"
           disabled={isSaving}
           onClick={onCancel}
           type="button"
@@ -262,14 +262,14 @@ export const WorkoutFeed = forwardRef<WorkoutFeedHandle>(function WorkoutFeed(_p
     }
   }
 
-  if (state.status === "loading") return <div className="h-40 animate-pulse rounded-3xl bg-stone-100" />;
+  if (state.status === "loading") return <div className="h-40 animate-pulse rounded-3xl bg-surface-2" />;
   if (state.status === "error") {
-    return <p className="rounded-3xl bg-rose-50 p-6 text-sm text-rose-800">Recent activity could not be loaded.</p>;
+    return <p className="rounded-3xl bg-red/10 p-6 text-sm text-red">Recent activity could not be loaded.</p>;
   }
   if (state.workouts.length === 0) {
     return (
-      <div className="rounded-3xl border border-dashed border-stone-300 bg-white/50 p-6">
-        <p className="text-sm text-stone-500">No workouts logged yet. Log your first session above.</p>
+      <div className="rounded-3xl border border-dashed border-line-strong bg-surface/50 p-6">
+        <p className="text-sm text-muted">No workouts logged yet. Log your first session above.</p>
       </div>
     );
   }
@@ -282,24 +282,24 @@ export const WorkoutFeed = forwardRef<WorkoutFeedHandle>(function WorkoutFeed(_p
         const isOwner = currentUserId !== undefined && workout.user_id === currentUserId;
         const isEditing = editingId === workout.id;
         return (
-          <li className="rounded-2xl border border-stone-200 bg-white p-4" key={workout.id}>
+          <li className="rounded-2xl border border-line bg-surface p-4" key={workout.id}>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="font-semibold text-[#15221b]">{workout.title}</p>
-                <p className="mt-0.5 text-xs text-stone-500">
+                <p className="font-semibold text-ink">{workout.title}</p>
+                <p className="mt-0.5 text-xs text-muted">
                   {new Date(workout.occurred_at).toLocaleString(undefined, {
                     dateStyle: "medium",
                     timeStyle: "short",
                   })}
                 </p>
               </div>
-              <span className="shrink-0 rounded-full bg-[#f8ffe4] px-2.5 py-1 text-xs font-semibold text-[#567118]">
+              <span className="shrink-0 rounded-full bg-lime/10 px-2.5 py-1 text-xs font-semibold text-lime">
                 {workout.visibility === "team" ? "Team" : "Private"}
               </span>
             </div>
-            {formatMeta(workout) ? <p className="mt-2 text-sm text-stone-600">{formatMeta(workout)}</p> : null}
+            {formatMeta(workout) ? <p className="mt-2 text-sm text-muted">{formatMeta(workout)}</p> : null}
             {workout.category_slugs.length > 0 ? (
-              <p className="mt-2 text-xs uppercase tracking-[0.1em] text-stone-400">
+              <p className="mt-2 text-xs uppercase tracking-[0.1em] text-faint">
                 {workout.category_slugs.join(", ")}
               </p>
             ) : null}
@@ -309,7 +309,7 @@ export const WorkoutFeed = forwardRef<WorkoutFeedHandle>(function WorkoutFeed(_p
                   <a href={item.view_url} key={item.media_asset.id} rel="noreferrer" target="_blank">
                     <img
                       alt="Workout evidence"
-                      className="size-16 rounded-xl border border-stone-200 object-cover"
+                      className="size-16 rounded-xl border border-line object-cover"
                       src={item.view_url}
                     />
                   </a>
@@ -331,14 +331,14 @@ export const WorkoutFeed = forwardRef<WorkoutFeedHandle>(function WorkoutFeed(_p
               {isOwner && !isEditing ? (
                 <>
                   <button
-                    className="text-xs font-semibold text-[#506b13] underline decoration-[#a4c72b] underline-offset-4"
+                    className="text-xs font-semibold text-lime underline decoration-lime underline-offset-4"
                     onClick={() => setEditingId(workout.id)}
                     type="button"
                   >
                     Edit
                   </button>
                   <button
-                    className="text-xs font-semibold text-rose-700 underline decoration-rose-300 underline-offset-4 disabled:opacity-50"
+                    className="text-xs font-semibold text-red underline decoration-rose-300 underline-offset-4 disabled:opacity-50"
                     disabled={deletingId === workout.id}
                     onClick={() => handleDelete(workout.id)}
                     type="button"
@@ -349,7 +349,7 @@ export const WorkoutFeed = forwardRef<WorkoutFeedHandle>(function WorkoutFeed(_p
               ) : null}
             </div>
             {deleteErrorId === workout.id ? (
-              <p className="mt-2 text-xs text-rose-700">This workout could not be deleted.</p>
+              <p className="mt-2 text-xs text-red">This workout could not be deleted.</p>
             ) : null}
           </li>
         );

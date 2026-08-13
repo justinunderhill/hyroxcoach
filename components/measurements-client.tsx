@@ -12,7 +12,7 @@ export function MeasurementsClient() {
     <div className="space-y-10">
       <MeasurementForm onLogged={() => feedRef.current?.refresh()} />
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">History</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-faint">History</p>
         <div className="mt-3">
           <MeasurementFeed ref={feedRef} />
         </div>

@@ -136,177 +136,190 @@ export function CindyTimer({ onCompleted }: CindyTimerProps) {
   }
 
   const remainingMs = Math.max(0, FULL_DURATION_MS - liveElapsedMs);
+  const totalRounds = fullRounds;
 
-  return (
-    <div className="rounded-3xl border border-stone-200 bg-white p-6">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">20-minute AMRAP</p>
-      <p className="mt-2 text-sm text-stone-500">5 pull-ups, 10 push-ups, 15 air squats — repeat.</p>
+  if (phase === "finished") {
+    return (
+      <div className="rounded-3xl border border-line bg-surface p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-faint">20-minute AMRAP</p>
+        <p className="mt-2 text-sm text-muted">5 pull-ups, 10 push-ups, 15 air squats — repeat.</p>
 
-      <p className="mt-6 text-center font-mono text-6xl font-bold tabular-nums text-[#15221b]">
-        {formatClock(remainingMs)}
-      </p>
-
-      {phase !== "finished" ? (
-        <>
-          <div className="mt-6 flex justify-center gap-3">
-            {phase === "idle" ? (
-              <button className="min-h-12 rounded-2xl bg-[#15271e] px-6 text-sm font-bold text-white" onClick={handleStart} type="button">
-                Start
-              </button>
-            ) : null}
-            {phase === "running" ? (
-              <button className="min-h-12 rounded-2xl border border-stone-300 px-6 text-sm font-semibold text-stone-700" onClick={handlePause} type="button">
-                Pause
-              </button>
-            ) : null}
-            {phase === "paused" ? (
-              <button className="min-h-12 rounded-2xl bg-[#15271e] px-6 text-sm font-bold text-white" onClick={handleResume} type="button">
-                Resume
-              </button>
-            ) : null}
-            {phase !== "idle" ? (
-              <button className="min-h-12 rounded-2xl border border-stone-300 px-6 text-sm font-semibold text-stone-700" onClick={handleFinish} type="button">
-                Finish
-              </button>
-            ) : null}
-          </div>
-
-          <div className="mt-8 flex flex-col items-center gap-4">
-            <button
-              className="min-h-14 w-full max-w-xs rounded-2xl bg-[#d8ff62] text-lg font-bold text-[#15271e] disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={phase === "idle"}
-              onClick={() => setFullRounds((value) => value + 1)}
-              type="button"
-            >
-              + ROUND ({fullRounds})
-            </button>
-            <button
-              className="min-h-11 w-full max-w-xs rounded-xl border border-stone-200 bg-[#fafaf7] text-xs font-semibold text-stone-700 disabled:opacity-50"
-              disabled={phase === "idle" || fullRounds === 0}
-              onClick={() => setFullRounds((value) => Math.max(0, value - 1))}
-              type="button"
-            >
-              − Round
-            </button>
-            <div className="grid w-full max-w-xs grid-cols-3 gap-2">
-              <div className="flex min-h-11 items-center justify-between rounded-xl border border-stone-200 bg-[#fafaf7] px-2 text-xs font-semibold text-stone-700">
-                <button
-                  aria-label="Decrease pull-ups"
-                  className="min-h-8 min-w-8 rounded-lg text-stone-500 disabled:opacity-30"
-                  disabled={phase === "idle" || extraPullups === 0}
-                  onClick={() => setExtraPullups((v) => Math.max(0, v - 1))}
-                  type="button"
-                >
-                  −
-                </button>
-                <span className="px-1 text-center">Pull-ups ({extraPullups})</span>
-                <button
-                  aria-label="Increase pull-ups"
-                  className="min-h-8 min-w-8 rounded-lg text-stone-500 disabled:opacity-30"
-                  disabled={phase === "idle"}
-                  onClick={() => setExtraPullups((v) => v + 1)}
-                  type="button"
-                >
-                  +
-                </button>
-              </div>
-              <div className="flex min-h-11 items-center justify-between rounded-xl border border-stone-200 bg-[#fafaf7] px-2 text-xs font-semibold text-stone-700">
-                <button
-                  aria-label="Decrease push-ups"
-                  className="min-h-8 min-w-8 rounded-lg text-stone-500 disabled:opacity-30"
-                  disabled={phase === "idle" || extraPushups === 0}
-                  onClick={() => setExtraPushups((v) => Math.max(0, v - 1))}
-                  type="button"
-                >
-                  −
-                </button>
-                <span className="px-1 text-center">Push-ups ({extraPushups})</span>
-                <button
-                  aria-label="Increase push-ups"
-                  className="min-h-8 min-w-8 rounded-lg text-stone-500 disabled:opacity-30"
-                  disabled={phase === "idle"}
-                  onClick={() => setExtraPushups((v) => v + 1)}
-                  type="button"
-                >
-                  +
-                </button>
-              </div>
-              <div className="flex min-h-11 items-center justify-between rounded-xl border border-stone-200 bg-[#fafaf7] px-2 text-xs font-semibold text-stone-700">
-                <button
-                  aria-label="Decrease squats"
-                  className="min-h-8 min-w-8 rounded-lg text-stone-500 disabled:opacity-30"
-                  disabled={phase === "idle" || extraSquats === 0}
-                  onClick={() => setExtraSquats((v) => Math.max(0, v - 1))}
-                  type="button"
-                >
-                  −
-                </button>
-                <span className="px-1 text-center">Squats ({extraSquats})</span>
-                <button
-                  aria-label="Increase squats"
-                  className="min-h-8 min-w-8 rounded-lg text-stone-500 disabled:opacity-30"
-                  disabled={phase === "idle"}
-                  onClick={() => setExtraSquats((v) => v + 1)}
-                  type="button"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      ) : (
-        <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
-          <p className="text-center text-sm text-stone-600">
+        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+          <p className="text-center text-sm text-muted">
             {fullRounds} full rounds · {extraPullups + extraPushups + extraSquats} partial reps · {formatClock((finalSeconds ?? 0) * 1000)} elapsed
           </p>
 
           <div className="grid grid-cols-2 gap-3">
-            <label className="text-xs font-semibold text-stone-500">
-              RPE <span className="font-normal text-stone-400">(optional)</span>
-              <input className="mt-1 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base" max={10} min={1} name="rpe" type="number" />
+            <label className="text-xs font-semibold text-muted">
+              RPE <span className="font-normal text-faint">(optional)</span>
+              <input className="mt-1 min-h-12 w-full rounded-2xl border border-line-strong bg-surface-2 px-4 text-base text-ink" max={10} min={1} name="rpe" type="number" />
             </label>
-            <label className="text-xs font-semibold text-stone-500">
-              Calories <span className="font-normal text-stone-400">(from device)</span>
-              <input className="mt-1 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base" min={0} name="caloriesBurned" type="number" />
+            <label className="text-xs font-semibold text-muted">
+              Calories <span className="font-normal text-faint">(from device)</span>
+              <input className="mt-1 min-h-12 w-full rounded-2xl border border-line-strong bg-surface-2 px-4 text-base text-ink" min={0} name="caloriesBurned" type="number" />
             </label>
           </div>
 
-          <label className="flex min-h-11 items-center gap-2 rounded-xl border border-stone-200 bg-[#fafaf7] px-3 text-sm text-stone-700">
-            <input className="accent-[#789416]" name="estimateCalories" type="checkbox" />
+          <label className="flex min-h-11 items-center gap-2 rounded-xl border border-line bg-surface-2 px-3 text-sm text-ink">
+            <input className="accent-lime" name="estimateCalories" type="checkbox" />
             No device reading — estimate calories for me
           </label>
 
           <fieldset>
-            <legend className="text-sm font-semibold text-stone-700">Visibility</legend>
+            <legend className="text-sm font-semibold text-ink">Visibility</legend>
             <div className="mt-2 flex gap-3">
-              <label className="flex min-h-11 items-center gap-2 rounded-xl border border-stone-200 bg-[#fafaf7] px-3 text-sm text-stone-700">
-                <input defaultChecked className="accent-[#789416]" name="visibility" type="radio" value="team" />
+              <label className="flex min-h-11 items-center gap-2 rounded-xl border border-line bg-surface-2 px-3 text-sm text-ink">
+                <input defaultChecked className="accent-lime" name="visibility" type="radio" value="team" />
                 Share with team
               </label>
-              <label className="flex min-h-11 items-center gap-2 rounded-xl border border-stone-200 bg-[#fafaf7] px-3 text-sm text-stone-700">
-                <input className="accent-[#789416]" name="visibility" type="radio" value="private" />
+              <label className="flex min-h-11 items-center gap-2 rounded-xl border border-line bg-surface-2 px-3 text-sm text-ink">
+                <input className="accent-lime" name="visibility" type="radio" value="private" />
                 Private
               </label>
             </div>
           </fieldset>
 
-          <label className="block text-sm font-semibold text-stone-700">
-            Notes <span className="font-normal text-stone-400">(optional)</span>
-            <textarea className="mt-2 min-h-20 w-full rounded-2xl border border-stone-300 px-4 py-3 text-base" maxLength={2000} name="notes" />
+          <label className="block text-sm font-semibold text-ink">
+            Notes <span className="font-normal text-faint">(optional)</span>
+            <textarea className="mt-2 min-h-20 w-full rounded-2xl border border-line-strong bg-surface-2 px-4 py-3 text-base text-ink" maxLength={2000} name="notes" />
           </label>
 
-          {error ? <p aria-live="polite" className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-800">{error}</p> : null}
+          {error ? <p aria-live="polite" className="rounded-2xl bg-red/10 px-4 py-3 text-sm text-red">{error}</p> : null}
 
           <button
-            className="min-h-12 w-full rounded-2xl bg-[#15271e] px-5 py-3 text-sm font-bold text-white disabled:cursor-wait disabled:opacity-60"
+            className="min-h-12 w-full rounded-2xl bg-lime px-5 py-3 text-sm font-bold text-lime-ink disabled:cursor-wait disabled:opacity-60"
             disabled={isSubmitting}
             type="submit"
           >
             {isSubmitting ? "Saving…" : "Save result"}
           </button>
         </form>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-[calc(100vh-2rem)] flex-col rounded-3xl bg-canvas p-6 sm:min-h-[36rem]">
+      <div className="text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-faint">20-minute AMRAP</p>
+        <p className="mt-1 text-sm text-muted">5 pull-ups · 10 push-ups · 15 air squats — repeat</p>
+      </div>
+
+      <div className="flex flex-1 flex-col items-center justify-center">
+        <p className="font-mono text-7xl font-bold tabular-nums text-ink sm:text-8xl">
+          {formatClock(remainingMs)}
+        </p>
+        <p className="mt-3 text-sm font-semibold uppercase tracking-[0.3em] text-lime">
+          Round {totalRounds + 1}
+        </p>
+
+        <div className="mt-6 flex justify-center gap-3">
+          {phase === "idle" ? (
+            <button className="min-h-12 rounded-2xl bg-lime px-8 text-sm font-bold text-lime-ink" onClick={handleStart} type="button">
+              Start
+            </button>
+          ) : null}
+          {phase === "running" ? (
+            <button className="min-h-12 rounded-2xl border border-line-strong px-8 text-sm font-semibold text-ink" onClick={handlePause} type="button">
+              Pause
+            </button>
+          ) : null}
+          {phase === "paused" ? (
+            <button className="min-h-12 rounded-2xl bg-lime px-8 text-sm font-bold text-lime-ink" onClick={handleResume} type="button">
+              Resume
+            </button>
+          ) : null}
+          {phase !== "idle" ? (
+            <button className="min-h-12 rounded-2xl border border-line-strong px-8 text-sm font-semibold text-ink" onClick={handleFinish} type="button">
+              Finish
+            </button>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="flex flex-col items-center gap-3">
+        <button
+          className="min-h-16 w-full max-w-sm rounded-3xl bg-lime text-xl font-black uppercase tracking-tight text-lime-ink shadow-[0_0_40px_rgba(200,255,61,0.25)] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+          disabled={phase === "idle"}
+          onClick={() => setFullRounds((value) => value + 1)}
+          type="button"
+        >
+          Round complete · {fullRounds}
+        </button>
+        <button
+          className="min-h-10 w-full max-w-sm rounded-xl border border-line-strong bg-surface text-xs font-semibold text-muted disabled:opacity-40"
+          disabled={phase === "idle" || fullRounds === 0}
+          onClick={() => setFullRounds((value) => Math.max(0, value - 1))}
+          type="button"
+        >
+          − Undo round
+        </button>
+        <div className="grid w-full max-w-sm grid-cols-3 gap-2">
+          <div className="flex min-h-11 items-center justify-between rounded-xl border border-line bg-surface px-2 text-xs font-semibold text-ink">
+            <button
+              aria-label="Decrease pull-ups"
+              className="min-h-8 min-w-8 rounded-lg text-muted disabled:opacity-30"
+              disabled={phase === "idle" || extraPullups === 0}
+              onClick={() => setExtraPullups((v) => Math.max(0, v - 1))}
+              type="button"
+            >
+              −
+            </button>
+            <span className="px-1 text-center">Pull-ups ({extraPullups})</span>
+            <button
+              aria-label="Increase pull-ups"
+              className="min-h-8 min-w-8 rounded-lg text-muted disabled:opacity-30"
+              disabled={phase === "idle"}
+              onClick={() => setExtraPullups((v) => v + 1)}
+              type="button"
+            >
+              +
+            </button>
+          </div>
+          <div className="flex min-h-11 items-center justify-between rounded-xl border border-line bg-surface px-2 text-xs font-semibold text-ink">
+            <button
+              aria-label="Decrease push-ups"
+              className="min-h-8 min-w-8 rounded-lg text-muted disabled:opacity-30"
+              disabled={phase === "idle" || extraPushups === 0}
+              onClick={() => setExtraPushups((v) => Math.max(0, v - 1))}
+              type="button"
+            >
+              −
+            </button>
+            <span className="px-1 text-center">Push-ups ({extraPushups})</span>
+            <button
+              aria-label="Increase push-ups"
+              className="min-h-8 min-w-8 rounded-lg text-muted disabled:opacity-30"
+              disabled={phase === "idle"}
+              onClick={() => setExtraPushups((v) => v + 1)}
+              type="button"
+            >
+              +
+            </button>
+          </div>
+          <div className="flex min-h-11 items-center justify-between rounded-xl border border-line bg-surface px-2 text-xs font-semibold text-ink">
+            <button
+              aria-label="Decrease squats"
+              className="min-h-8 min-w-8 rounded-lg text-muted disabled:opacity-30"
+              disabled={phase === "idle" || extraSquats === 0}
+              onClick={() => setExtraSquats((v) => Math.max(0, v - 1))}
+              type="button"
+            >
+              −
+            </button>
+            <span className="px-1 text-center">Squats ({extraSquats})</span>
+            <button
+              aria-label="Increase squats"
+              className="min-h-8 min-w-8 rounded-lg text-muted disabled:opacity-30"
+              disabled={phase === "idle"}
+              onClick={() => setExtraSquats((v) => v + 1)}
+              type="button"
+            >
+              +
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

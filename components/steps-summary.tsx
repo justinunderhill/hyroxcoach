@@ -72,9 +72,9 @@ export const StepsSummary = forwardRef<StepsSummaryHandle>(function StepsSummary
     }
   }
 
-  if (state.status === "loading") return <div className="h-48 animate-pulse rounded-3xl bg-stone-100" />;
+  if (state.status === "loading") return <div className="h-48 animate-pulse rounded-3xl bg-surface-2" />;
   if (state.status === "error") {
-    return <p className="rounded-3xl bg-rose-50 p-6 text-sm text-rose-800">Step history could not be loaded.</p>;
+    return <p className="rounded-3xl bg-red/10 p-6 text-sm text-red">Step history could not be loaded.</p>;
   }
 
   const { history } = state;
@@ -82,38 +82,38 @@ export const StepsSummary = forwardRef<StepsSummaryHandle>(function StepsSummary
   const currentUserId = session?.user?.id;
 
   return (
-    <div className="rounded-3xl border border-stone-200 bg-white p-6">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">Steps</p>
+    <div className="rounded-3xl border border-line bg-surface p-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-faint">Steps</p>
       <div className="mt-3 grid grid-cols-3 gap-4">
         <div>
-          <p className="text-2xl font-semibold tracking-[-0.03em] text-[#15221b]">{history.weekly_total.toLocaleString()}</p>
-          <p className="text-xs text-stone-500">7-day total</p>
+          <p className="text-2xl font-semibold tracking-[-0.03em] text-ink">{history.weekly_total.toLocaleString()}</p>
+          <p className="text-xs text-muted">7-day total</p>
         </div>
         <div>
-          <p className="text-2xl font-semibold tracking-[-0.03em] text-[#15221b]">{history.seven_day_average.toLocaleString()}</p>
-          <p className="text-xs text-stone-500">7-day average</p>
+          <p className="text-2xl font-semibold tracking-[-0.03em] text-ink">{history.seven_day_average.toLocaleString()}</p>
+          <p className="text-xs text-muted">7-day average</p>
         </div>
         <div>
-          <p className={`text-2xl font-semibold tracking-[-0.03em] ${trend >= 0 ? "text-[#567118]" : "text-stone-500"}`}>
+          <p className={`text-2xl font-semibold tracking-[-0.03em] ${trend >= 0 ? "text-lime" : "text-muted"}`}>
             {trend >= 0 ? "+" : ""}
             {trend.toLocaleString()}
           </p>
-          <p className="text-xs text-stone-500">vs prior week</p>
+          <p className="text-xs text-muted">vs prior week</p>
         </div>
       </div>
 
       {history.entries.length > 0 ? (
-        <ul className="mt-5 space-y-1.5 text-sm text-stone-600">
+        <ul className="mt-5 space-y-1.5 text-sm text-muted">
           {history.entries.slice(0, 7).map((entry) => {
             const isOwner = currentUserId !== undefined && entry.user_id === currentUserId;
             return (
               <li className="flex items-center justify-between gap-3" key={entry.id}>
                 <span>{new Date(entry.date).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</span>
                 <span className="flex items-center gap-2">
-                  <span className="font-semibold text-stone-800">{entry.steps.toLocaleString()}</span>
+                  <span className="font-semibold text-ink">{entry.steps.toLocaleString()}</span>
                   {isOwner ? (
                     <button
-                      className="text-xs font-semibold text-rose-700 underline decoration-rose-300 underline-offset-4 disabled:opacity-50"
+                      className="text-xs font-semibold text-red underline decoration-rose-300 underline-offset-4 disabled:opacity-50"
                       disabled={deletingDate === entry.date}
                       onClick={() => handleDelete(entry.date)}
                       type="button"
@@ -127,10 +127,10 @@ export const StepsSummary = forwardRef<StepsSummaryHandle>(function StepsSummary
           })}
         </ul>
       ) : (
-        <p className="mt-5 text-sm text-stone-500">No steps logged yet.</p>
+        <p className="mt-5 text-sm text-muted">No steps logged yet.</p>
       )}
       {deleteErrorDate ? (
-        <p className="mt-2 text-xs text-rose-700">That entry could not be deleted.</p>
+        <p className="mt-2 text-xs text-red">That entry could not be deleted.</p>
       ) : null}
     </div>
   );

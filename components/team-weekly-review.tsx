@@ -51,15 +51,15 @@ export function TeamWeeklyReview() {
   if (state.status === "loading-team" || state.status === "no-team") return null;
 
   return (
-    <div className="rounded-3xl border border-stone-200 bg-white p-6">
+    <div className="rounded-3xl border border-line bg-surface p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">Coach</p>
-          <h3 className="mt-1 text-sm font-semibold text-[#15221b]">Team weekly review</h3>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-faint">Coach</p>
+          <h3 className="mt-1 text-sm font-semibold text-ink">Team weekly review</h3>
         </div>
         {state.status !== "loading" ? (
           <button
-            className="min-h-9 rounded-xl bg-[#15271e] px-3 text-xs font-bold text-white"
+            className="min-h-9 rounded-xl bg-lime px-3 text-xs font-bold text-lime-ink"
             onClick={() => handleGenerate(state.teamId)}
             type="button"
           >
@@ -69,10 +69,10 @@ export function TeamWeeklyReview() {
       </div>
 
       {state.status === "loading" ? (
-        <div className="mt-4 h-24 animate-pulse rounded-2xl bg-stone-100" />
+        <div className="mt-4 h-24 animate-pulse rounded-2xl bg-surface-2" />
       ) : null}
       {state.status === "error" ? (
-        <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-800">{state.message}</p>
+        <p className="mt-4 rounded-2xl bg-red/10 px-4 py-3 text-sm text-red">{state.message}</p>
       ) : null}
       {state.status === "ready" ? (
         <div className="mt-4">
@@ -80,7 +80,7 @@ export function TeamWeeklyReview() {
         </div>
       ) : null}
       {state.status === "idle" ? (
-        <p className="mt-3 text-sm text-stone-500">
+        <p className="mt-3 text-sm text-muted">
           Only team-visible activity is used — private workouts stay private, even in a shared review.
         </p>
       ) : null}

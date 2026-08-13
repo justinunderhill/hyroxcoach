@@ -63,30 +63,30 @@ export function NutritionTargetForm({ onSaved }: NutritionTargetFormProps) {
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">Set new daily target</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-faint">Set new daily target</p>
       <div className="grid grid-cols-4 gap-3">
-        <label className="text-xs font-semibold text-stone-500">
+        <label className="text-xs font-semibold text-muted">
           Calories
-          <input className="mt-1 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base" min={0} name="caloriesTarget" type="number" />
+          <input className="mt-1 min-h-12 w-full rounded-2xl border border-line-strong px-4 text-base" min={0} name="caloriesTarget" type="number" />
         </label>
-        <label className="text-xs font-semibold text-stone-500">
+        <label className="text-xs font-semibold text-muted">
           Protein, g
-          <input className="mt-1 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base" min={0} name="proteinGTarget" step="0.1" type="number" />
+          <input className="mt-1 min-h-12 w-full rounded-2xl border border-line-strong px-4 text-base" min={0} name="proteinGTarget" step="0.1" type="number" />
         </label>
-        <label className="text-xs font-semibold text-stone-500">
+        <label className="text-xs font-semibold text-muted">
           Carbs, g
-          <input className="mt-1 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base" min={0} name="carbsGTarget" step="0.1" type="number" />
+          <input className="mt-1 min-h-12 w-full rounded-2xl border border-line-strong px-4 text-base" min={0} name="carbsGTarget" step="0.1" type="number" />
         </label>
-        <label className="text-xs font-semibold text-stone-500">
+        <label className="text-xs font-semibold text-muted">
           Fat, g
-          <input className="mt-1 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base" min={0} name="fatGTarget" step="0.1" type="number" />
+          <input className="mt-1 min-h-12 w-full rounded-2xl border border-line-strong px-4 text-base" min={0} name="fatGTarget" step="0.1" type="number" />
         </label>
       </div>
 
-      {error ? <p aria-live="polite" className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-800">{error}</p> : null}
+      {error ? <p aria-live="polite" className="rounded-2xl bg-red/10 px-4 py-3 text-sm text-red">{error}</p> : null}
 
       <button
-        className="min-h-11 rounded-xl border border-stone-300 px-4 text-sm font-semibold text-stone-700 disabled:cursor-wait disabled:opacity-60"
+        className="min-h-11 rounded-xl border border-line-strong px-4 text-sm font-semibold text-ink disabled:cursor-wait disabled:opacity-60"
         disabled={isSubmitting}
         type="submit"
       >

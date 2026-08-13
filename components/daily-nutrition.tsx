@@ -37,16 +37,16 @@ function macroRow(label: string, consumed: number, target: string | number | nul
   return (
     <div>
       <div className="flex items-baseline justify-between text-sm">
-        <span className="font-semibold text-stone-700">{label}</span>
-        <span className="text-stone-500">
+        <span className="font-semibold text-ink">{label}</span>
+        <span className="text-muted">
           {consumed}
           {targetValue ? ` / ${targetValue}` : ""}
           {remaining !== null ? ` · ${remaining >= 0 ? `${remaining} left` : `${Math.abs(remaining)} over`}` : ""}
         </span>
       </div>
       {pct !== null ? (
-        <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-stone-100">
-          <div className="h-full rounded-full bg-[#789416]" style={{ width: `${pct}%` }} />
+        <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-surface-2">
+          <div className="h-full rounded-full bg-lime" style={{ width: `${pct}%` }} />
         </div>
       ) : null}
     </div>
@@ -77,18 +77,18 @@ export const DailyNutritionCard = forwardRef<DailyNutritionHandle>(function Dail
     return () => controller.abort();
   }, [reloadToken]);
 
-  if (state.status === "loading") return <div className="h-48 animate-pulse rounded-3xl bg-stone-100" />;
+  if (state.status === "loading") return <div className="h-48 animate-pulse rounded-3xl bg-surface-2" />;
   if (state.status === "error") {
-    return <p className="rounded-3xl bg-rose-50 p-6 text-sm text-rose-800">Nutrition for today could not be loaded.</p>;
+    return <p className="rounded-3xl bg-red/10 p-6 text-sm text-red">Nutrition for today could not be loaded.</p>;
   }
 
   const { nutrition } = state;
 
   return (
-    <div className="rounded-3xl border border-stone-200 bg-white p-6">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">Today</p>
+    <div className="rounded-3xl border border-line bg-surface p-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-faint">Today</p>
       {nutrition.target === null ? (
-        <p className="mt-2 text-sm text-stone-500">No target set yet — logged {nutrition.consumed.calories} kcal so far today.</p>
+        <p className="mt-2 text-sm text-muted">No target set yet — logged {nutrition.consumed.calories} kcal so far today.</p>
       ) : (
         <div className="mt-4 space-y-4">
           {macroRow("Calories", nutrition.consumed.calories, nutrition.target.calories_target, nutrition.remaining.calories)}
@@ -97,11 +97,11 @@ export const DailyNutritionCard = forwardRef<DailyNutritionHandle>(function Dail
           {macroRow("Fat", nutrition.consumed.fat_g, nutrition.target.fat_g_target, nutrition.remaining.fat_g)}
         </div>
       )}
-      <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">Meals today</p>
+      <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-faint">Meals today</p>
       {nutrition.meals.length === 0 ? (
-        <p className="mt-2 text-sm text-stone-500">Nothing logged yet today.</p>
+        <p className="mt-2 text-sm text-muted">Nothing logged yet today.</p>
       ) : (
-        <ul className="mt-2 space-y-1.5 text-sm text-stone-600">
+        <ul className="mt-2 space-y-1.5 text-sm text-muted">
           {nutrition.meals.map((meal) => (
             <li key={meal.id}>
               {meal.description}

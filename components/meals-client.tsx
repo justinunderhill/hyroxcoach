@@ -12,7 +12,7 @@ export function MealsClient() {
     <div className="space-y-10">
       <MealForm onLogged={() => feedRef.current?.refresh()} />
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">Recent meals</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-faint">Recent meals</p>
         <div className="mt-3">
           <MealFeed ref={feedRef} />
         </div>

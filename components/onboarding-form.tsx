@@ -78,11 +78,11 @@ export function OnboardingForm({ initialName }: OnboardingFormProps) {
   return (
     <form className="mt-8 space-y-8" onSubmit={handleSubmit}>
       <div className="grid gap-5 sm:grid-cols-2">
-        <label className="block text-sm font-semibold text-stone-700 sm:col-span-2">
+        <label className="block text-sm font-semibold text-ink sm:col-span-2">
           Display name
           <input
             autoComplete="name"
-            className="mt-2 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base outline-none focus:border-[#789416] focus:ring-4 focus:ring-[#d8ff62]/30"
+            className="mt-2 min-h-12 w-full rounded-2xl border border-line-strong px-4 text-base outline-none focus:border-lime focus:ring-4 focus:ring-lime/30"
             defaultValue={initialName}
             maxLength={80}
             name="displayName"
@@ -90,10 +90,10 @@ export function OnboardingForm({ initialName }: OnboardingFormProps) {
           />
         </label>
 
-        <label className="block text-sm font-semibold text-stone-700 sm:col-span-2">
+        <label className="block text-sm font-semibold text-ink sm:col-span-2">
           Timezone
           <input
-            className="mt-2 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base outline-none focus:border-[#789416] focus:ring-4 focus:ring-[#d8ff62]/30"
+            className="mt-2 min-h-12 w-full rounded-2xl border border-line-strong px-4 text-base outline-none focus:border-lime focus:ring-4 focus:ring-lime/30"
             defaultValue={detectedTimezone}
             maxLength={64}
             name="timezone"
@@ -103,14 +103,14 @@ export function OnboardingForm({ initialName }: OnboardingFormProps) {
       </div>
 
       <fieldset>
-        <legend className="text-sm font-semibold text-stone-700">When can you usually train?</legend>
+        <legend className="text-sm font-semibold text-ink">When can you usually train?</legend>
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
           {trainingDays.map((day) => (
             <label
-              className="flex min-h-11 items-center gap-2 rounded-xl border border-stone-200 bg-[#fafaf7] px-3 text-sm capitalize text-stone-700"
+              className="flex min-h-11 items-center gap-2 rounded-xl border border-line bg-surface-2 px-3 text-sm capitalize text-ink"
               key={day}
             >
-              <input className="size-4 accent-[#789416]" name={day} type="checkbox" />
+              <input className="size-4 accent-lime" name={day} type="checkbox" />
               {day.slice(0, 3)}
             </label>
           ))}
@@ -118,38 +118,38 @@ export function OnboardingForm({ initialName }: OnboardingFormProps) {
       </fieldset>
 
       <div>
-        <p className="text-sm font-semibold text-stone-700">Optional 5 km baseline</p>
+        <p className="text-sm font-semibold text-ink">Optional 5 km baseline</p>
         <div className="mt-2 grid grid-cols-2 gap-3">
-          <label className="text-xs text-stone-500">
+          <label className="text-xs text-muted">
             Minutes
-            <input className="mt-1 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base" min="1" name="fiveKmMinutes" type="number" />
+            <input className="mt-1 min-h-12 w-full rounded-2xl border border-line-strong px-4 text-base" min="1" name="fiveKmMinutes" type="number" />
           </label>
-          <label className="text-xs text-stone-500">
+          <label className="text-xs text-muted">
             Seconds
-            <input className="mt-1 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base" max="59" min="0" name="fiveKmSeconds" type="number" />
+            <input className="mt-1 min-h-12 w-full rounded-2xl border border-line-strong px-4 text-base" max="59" min="0" name="fiveKmSeconds" type="number" />
           </label>
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="text-sm font-semibold text-stone-700">
-          Bodyweight, kg <span className="font-normal text-stone-400">(optional, private)</span>
-          <input className="mt-2 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base" max="400" min="20" name="weightKg" step="0.1" type="number" />
+        <label className="text-sm font-semibold text-ink">
+          Bodyweight, kg <span className="font-normal text-faint">(optional, private)</span>
+          <input className="mt-2 min-h-12 w-full rounded-2xl border border-line-strong px-4 text-base" max="400" min="20" name="weightKg" step="0.1" type="number" />
         </label>
-        <label className="text-sm font-semibold text-stone-700">
-          Waist, cm <span className="font-normal text-stone-400">(optional, private)</span>
-          <input className="mt-2 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base" max="250" min="30" name="waistCm" step="0.1" type="number" />
+        <label className="text-sm font-semibold text-ink">
+          Waist, cm <span className="font-normal text-faint">(optional, private)</span>
+          <input className="mt-2 min-h-12 w-full rounded-2xl border border-line-strong px-4 text-base" max="250" min="30" name="waistCm" step="0.1" type="number" />
         </label>
       </div>
 
-      <label className="block text-sm font-semibold text-stone-700">
-        Availability notes <span className="font-normal text-stone-400">(optional)</span>
-        <textarea className="mt-2 min-h-24 w-full rounded-2xl border border-stone-300 px-4 py-3 text-base" maxLength={500} name="trainingNotes" placeholder="For example: weekday mornings, longer session on Saturday" />
+      <label className="block text-sm font-semibold text-ink">
+        Availability notes <span className="font-normal text-faint">(optional)</span>
+        <textarea className="mt-2 min-h-24 w-full rounded-2xl border border-line-strong px-4 py-3 text-base" maxLength={500} name="trainingNotes" placeholder="For example: weekday mornings, longer session on Saturday" />
       </label>
 
-      {error ? <p aria-live="polite" className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-800">{error}</p> : null}
+      {error ? <p aria-live="polite" className="rounded-2xl bg-red/10 px-4 py-3 text-sm text-red">{error}</p> : null}
 
-      <button className="min-h-12 w-full rounded-2xl bg-[#15271e] px-5 py-3 text-sm font-bold text-white disabled:cursor-wait disabled:opacity-60" disabled={isSubmitting} type="submit">
+      <button className="min-h-12 w-full rounded-2xl bg-lime px-5 py-3 text-sm font-bold text-lime-ink disabled:cursor-wait disabled:opacity-60" disabled={isSubmitting} type="submit">
         {isSubmitting ? "Saving profile…" : "Continue to dashboard"}
       </button>
     </form>

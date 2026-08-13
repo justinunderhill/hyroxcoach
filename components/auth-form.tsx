@@ -50,11 +50,11 @@ export function AuthForm({ mode, next }: AuthFormProps) {
   return (
     <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
       {isSignUp ? (
-        <label className="block text-sm font-semibold text-stone-700">
+        <label className="block text-sm font-semibold text-ink">
           Name
           <input
             autoComplete="name"
-            className="mt-2 min-h-12 w-full rounded-2xl border border-stone-300 bg-white px-4 text-base outline-none transition focus:border-[#789416] focus:ring-4 focus:ring-[#d8ff62]/30"
+            className="mt-2 min-h-12 w-full rounded-2xl border border-line-strong bg-surface px-4 text-base outline-none transition focus:border-lime focus:ring-4 focus:ring-lime/30"
             maxLength={80}
             name="name"
             required
@@ -62,22 +62,22 @@ export function AuthForm({ mode, next }: AuthFormProps) {
         </label>
       ) : null}
 
-      <label className="block text-sm font-semibold text-stone-700">
+      <label className="block text-sm font-semibold text-ink">
         Email
         <input
           autoComplete="email"
-          className="mt-2 min-h-12 w-full rounded-2xl border border-stone-300 bg-white px-4 text-base outline-none transition focus:border-[#789416] focus:ring-4 focus:ring-[#d8ff62]/30"
+          className="mt-2 min-h-12 w-full rounded-2xl border border-line-strong bg-surface px-4 text-base outline-none transition focus:border-lime focus:ring-4 focus:ring-lime/30"
           name="email"
           required
           type="email"
         />
       </label>
 
-      <label className="block text-sm font-semibold text-stone-700">
+      <label className="block text-sm font-semibold text-ink">
         Password
         <input
           autoComplete={isSignUp ? "new-password" : "current-password"}
-          className="mt-2 min-h-12 w-full rounded-2xl border border-stone-300 bg-white px-4 text-base outline-none transition focus:border-[#789416] focus:ring-4 focus:ring-[#d8ff62]/30"
+          className="mt-2 min-h-12 w-full rounded-2xl border border-line-strong bg-surface px-4 text-base outline-none transition focus:border-lime focus:ring-4 focus:ring-lime/30"
           minLength={8}
           name="password"
           required
@@ -86,23 +86,23 @@ export function AuthForm({ mode, next }: AuthFormProps) {
       </label>
 
       {error ? (
-        <p aria-live="polite" className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+        <p aria-live="polite" className="rounded-2xl border border-red/30 bg-red/10 px-4 py-3 text-sm text-red">
           {error}
         </p>
       ) : null}
 
       <button
-        className="min-h-12 w-full rounded-2xl bg-[#15271e] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#263c30] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#789416] disabled:cursor-wait disabled:opacity-60"
+        className="min-h-12 w-full rounded-2xl bg-lime px-5 py-3 text-sm font-bold text-lime-ink transition hover:bg-lime/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime disabled:cursor-wait disabled:opacity-60"
         disabled={isSubmitting}
         type="submit"
       >
         {isSubmitting ? "Please wait…" : isSignUp ? "Create account" : "Sign in"}
       </button>
 
-      <p className="text-center text-sm text-stone-500">
+      <p className="text-center text-sm text-muted">
         {isSignUp ? "Already have an account?" : "New to HYROX Coach?"}{" "}
         <Link
-          className="font-semibold text-[#506b13] underline decoration-[#a4c72b] underline-offset-4"
+          className="font-semibold text-lime underline decoration-lime underline-offset-4"
           href={
             (isSignUp ? "/auth/sign-in" : "/auth/sign-up") +
             (next ? `?next=${encodeURIComponent(next)}` : "")

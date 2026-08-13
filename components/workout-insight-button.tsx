@@ -29,7 +29,7 @@ export function WorkoutInsightButton({ workoutId }: { workoutId: string }) {
 
   if (state.status === "ready") {
     return (
-      <div className="mt-3 rounded-2xl bg-stone-50 p-3">
+      <div className="mt-3 rounded-2xl bg-surface-2 p-3">
         <CoachInsightCard insight={state.response.insight} />
       </div>
     );
@@ -38,7 +38,7 @@ export function WorkoutInsightButton({ workoutId }: { workoutId: string }) {
   return (
     <div className="mt-3">
       <button
-        className="min-h-8 rounded-xl border border-stone-200 px-3 text-xs font-semibold text-stone-600 disabled:opacity-60"
+        className="min-h-8 rounded-xl border border-line px-3 text-xs font-semibold text-muted disabled:opacity-60"
         disabled={state.status === "loading"}
         onClick={handleClick}
         type="button"
@@ -46,7 +46,7 @@ export function WorkoutInsightButton({ workoutId }: { workoutId: string }) {
         {state.status === "loading" ? "Thinking…" : "Get coach insight"}
       </button>
       {state.status === "error" ? (
-        <p className="mt-2 text-xs text-rose-700">{state.message}</p>
+        <p className="mt-2 text-xs text-red">{state.message}</p>
       ) : null}
     </div>
   );

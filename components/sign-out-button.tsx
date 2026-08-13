@@ -11,7 +11,7 @@ export function SignOutButton() {
 
   return (
     <button
-      className="min-h-11 rounded-xl border border-stone-300 px-4 text-sm font-semibold text-stone-700 disabled:opacity-60"
+      className="min-h-11 rounded-xl border border-line-strong px-4 text-sm font-semibold text-ink disabled:opacity-60"
       disabled={pending}
       onClick={async () => {
         setPending(true);

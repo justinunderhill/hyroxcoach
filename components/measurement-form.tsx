@@ -63,43 +63,43 @@ export function MeasurementForm({ onLogged }: MeasurementFormProps) {
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
       <div className="grid grid-cols-3 gap-3">
-        <label className="text-xs font-semibold text-stone-500">
+        <label className="text-xs font-semibold text-muted">
           Bodyweight, kg
-          <input className="mt-1 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base" max={400} min={20} name="weightKg" step="0.1" type="number" />
+          <input className="mt-1 min-h-12 w-full rounded-2xl border border-line-strong px-4 text-base" max={400} min={20} name="weightKg" step="0.1" type="number" />
         </label>
-        <label className="text-xs font-semibold text-stone-500">
+        <label className="text-xs font-semibold text-muted">
           Waist, cm
-          <input className="mt-1 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base" max={250} min={30} name="waistCm" step="0.1" type="number" />
+          <input className="mt-1 min-h-12 w-full rounded-2xl border border-line-strong px-4 text-base" max={250} min={30} name="waistCm" step="0.1" type="number" />
         </label>
-        <label className="text-xs font-semibold text-stone-500">
+        <label className="text-xs font-semibold text-muted">
           Resting HR
-          <input className="mt-1 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base" max={250} min={20} name="restingHr" type="number" />
+          <input className="mt-1 min-h-12 w-full rounded-2xl border border-line-strong px-4 text-base" max={250} min={20} name="restingHr" type="number" />
         </label>
       </div>
 
       <fieldset>
-        <legend className="text-sm font-semibold text-stone-700">Visibility</legend>
+        <legend className="text-sm font-semibold text-ink">Visibility</legend>
         <div className="mt-2 flex gap-3">
-          <label className="flex min-h-11 items-center gap-2 rounded-xl border border-stone-200 bg-[#fafaf7] px-3 text-sm text-stone-700">
-            <input defaultChecked className="accent-[#789416]" name="visibility" type="radio" value="private" />
+          <label className="flex min-h-11 items-center gap-2 rounded-xl border border-line bg-surface-2 px-3 text-sm text-ink">
+            <input defaultChecked className="accent-lime" name="visibility" type="radio" value="private" />
             Private
           </label>
-          <label className="flex min-h-11 items-center gap-2 rounded-xl border border-stone-200 bg-[#fafaf7] px-3 text-sm text-stone-700">
-            <input className="accent-[#789416]" name="visibility" type="radio" value="team" />
+          <label className="flex min-h-11 items-center gap-2 rounded-xl border border-line bg-surface-2 px-3 text-sm text-ink">
+            <input className="accent-lime" name="visibility" type="radio" value="team" />
             Share with team
           </label>
         </div>
       </fieldset>
 
-      <label className="block text-sm font-semibold text-stone-700">
-        Notes <span className="font-normal text-stone-400">(optional)</span>
-        <textarea className="mt-2 min-h-20 w-full rounded-2xl border border-stone-300 px-4 py-3 text-base" maxLength={500} name="notes" />
+      <label className="block text-sm font-semibold text-ink">
+        Notes <span className="font-normal text-faint">(optional)</span>
+        <textarea className="mt-2 min-h-20 w-full rounded-2xl border border-line-strong px-4 py-3 text-base" maxLength={500} name="notes" />
       </label>
 
-      {error ? <p aria-live="polite" className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-800">{error}</p> : null}
+      {error ? <p aria-live="polite" className="rounded-2xl bg-red/10 px-4 py-3 text-sm text-red">{error}</p> : null}
 
       <button
-        className="min-h-12 w-full rounded-2xl bg-[#15271e] px-5 py-3 text-sm font-bold text-white disabled:cursor-wait disabled:opacity-60"
+        className="min-h-12 w-full rounded-2xl bg-lime px-5 py-3 text-sm font-bold text-lime-ink disabled:cursor-wait disabled:opacity-60"
         disabled={isSubmitting}
         type="submit"
       >

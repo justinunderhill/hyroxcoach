@@ -66,54 +66,54 @@ export const CindyHistory = forwardRef<CindyHistoryHandle>(function CindyHistory
     return () => controller.abort();
   }, [reloadToken]);
 
-  if (state.status === "loading") return <div className="h-40 animate-pulse rounded-3xl bg-stone-100" />;
+  if (state.status === "loading") return <div className="h-40 animate-pulse rounded-3xl bg-surface-2" />;
   if (state.status === "error") {
-    return <p className="rounded-3xl bg-rose-50 p-6 text-sm text-rose-800">Cindy history could not be loaded.</p>;
+    return <p className="rounded-3xl bg-red/10 p-6 text-sm text-red">Cindy history could not be loaded.</p>;
   }
 
   const { analytics } = state;
 
   if (!analytics.latest) {
     return (
-      <div className="rounded-3xl border border-dashed border-stone-300 bg-white/50 p-6">
-        <p className="text-sm text-stone-500">No Cindy attempts logged yet.</p>
+      <div className="rounded-3xl border border-dashed border-line-strong bg-surface/50 p-6">
+        <p className="text-sm text-muted">No Cindy attempts logged yet.</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-3xl border border-stone-200 bg-white p-6">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">Cindy history</p>
+    <div className="rounded-3xl border border-line bg-surface p-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-faint">Cindy history</p>
       <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3">
         <div>
-          <p className="text-2xl font-semibold tracking-[-0.03em] text-[#15221b]">{analytics.latest.total_reps}</p>
-          <p className="text-xs text-stone-500">latest reps</p>
+          <p className="text-2xl font-semibold tracking-[-0.03em] text-ink">{analytics.latest.total_reps}</p>
+          <p className="text-xs text-muted">latest reps</p>
         </div>
         {analytics.personal_best ? (
           <div>
-            <p className="text-2xl font-semibold tracking-[-0.03em] text-[#15221b]">{analytics.personal_best.total_reps}</p>
-            <p className="text-xs text-stone-500">best reps</p>
+            <p className="text-2xl font-semibold tracking-[-0.03em] text-ink">{analytics.personal_best.total_reps}</p>
+            <p className="text-xs text-muted">best reps</p>
           </div>
         ) : null}
         {analytics.change_from_previous ? (
           <div>
-            <p className={`text-2xl font-semibold tracking-[-0.03em] ${analytics.change_from_previous.total_reps_change >= 0 ? "text-[#567118]" : "text-stone-500"}`}>
+            <p className={`text-2xl font-semibold tracking-[-0.03em] ${analytics.change_from_previous.total_reps_change >= 0 ? "text-lime" : "text-muted"}`}>
               {analytics.change_from_previous.total_reps_change >= 0 ? "+" : ""}
               {analytics.change_from_previous.total_reps_change}
             </p>
-            <p className="text-xs text-stone-500">reps vs prior</p>
+            <p className="text-xs text-muted">reps vs prior</p>
           </div>
         ) : null}
       </div>
 
-      <ul className="mt-5 space-y-1.5 text-sm text-stone-600">
+      <ul className="mt-5 space-y-1.5 text-sm text-muted">
         {analytics.history.slice(0, 8).map((attempt) => (
           <li className="flex items-center justify-between" key={attempt.completed_at}>
             <span>
               {new Date(attempt.completed_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
               {attempt.completed_as_prescribed ? "" : " (early finish)"}
             </span>
-            <span className="font-semibold text-stone-800">
+            <span className="font-semibold text-ink">
               {attempt.full_rounds} rounds · {attempt.total_reps} reps · {formatClock(attempt.total_seconds)}
             </span>
           </li>

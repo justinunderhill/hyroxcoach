@@ -86,72 +86,72 @@ function EditMeasurementForm({ measurement, onCancel, onSaved }: EditMeasurement
   }
 
   return (
-    <div className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-[#fafaf7] p-3">
-      <label className="block text-xs font-semibold text-stone-600">
+    <div className="mt-3 space-y-3 rounded-xl border border-line bg-surface-2 p-3">
+      <label className="block text-xs font-semibold text-muted">
         When
         <input
-          className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+          className="mt-1 min-h-11 w-full rounded-xl border border-line-strong px-3 text-sm"
           onChange={(event) => setOccurredAt(event.target.value)}
           type="datetime-local"
           value={occurredAt}
         />
       </label>
       <div className="grid grid-cols-3 gap-3">
-        <label className="block text-xs font-semibold text-stone-600">
+        <label className="block text-xs font-semibold text-muted">
           Weight, kg
           <input
-            className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+            className="mt-1 min-h-11 w-full rounded-xl border border-line-strong px-3 text-sm"
             onChange={(event) => setWeightKg(event.target.value)}
             step="0.1"
             type="number"
             value={weightKg}
           />
         </label>
-        <label className="block text-xs font-semibold text-stone-600">
+        <label className="block text-xs font-semibold text-muted">
           Waist, cm
           <input
-            className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+            className="mt-1 min-h-11 w-full rounded-xl border border-line-strong px-3 text-sm"
             onChange={(event) => setWaistCm(event.target.value)}
             step="0.1"
             type="number"
             value={waistCm}
           />
         </label>
-        <label className="block text-xs font-semibold text-stone-600">
+        <label className="block text-xs font-semibold text-muted">
           Resting HR
           <input
-            className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+            className="mt-1 min-h-11 w-full rounded-xl border border-line-strong px-3 text-sm"
             onChange={(event) => setRestingHr(event.target.value)}
             type="number"
             value={restingHr}
           />
         </label>
       </div>
-      <label className="block text-xs font-semibold text-stone-600">
+      <label className="block text-xs font-semibold text-muted">
         Notes
         <textarea
-          className="mt-1 min-h-16 w-full rounded-xl border border-stone-300 px-3 py-2 text-sm"
+          className="mt-1 min-h-16 w-full rounded-xl border border-line-strong px-3 py-2 text-sm"
           onChange={(event) => setNotes(event.target.value)}
           value={notes}
         />
       </label>
       <fieldset>
-        <legend className="text-xs font-semibold text-stone-600">Visibility</legend>
+        <legend className="text-xs font-semibold text-muted">Visibility</legend>
         <div className="mt-1 flex gap-3">
-          <label className="flex items-center gap-1.5 text-xs text-stone-700">
+          <label className="flex items-center gap-1.5 text-xs text-ink">
             <input checked={visibility === "private"} onChange={() => setVisibility("private")} type="radio" />
             Private
           </label>
-          <label className="flex items-center gap-1.5 text-xs text-stone-700">
+          <label className="flex items-center gap-1.5 text-xs text-ink">
             <input checked={visibility === "team"} onChange={() => setVisibility("team")} type="radio" />
             Team
           </label>
         </div>
       </fieldset>
-      {error ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-800">{error}</p> : null}
+      {error ? <p className="rounded-xl bg-red/10 px-3 py-2 text-xs text-red">{error}</p> : null}
       <div className="flex gap-2">
         <button
-          className="min-h-10 flex-1 rounded-xl bg-[#15271e] text-xs font-bold text-white disabled:cursor-wait disabled:opacity-60"
+          className="min-h-10 flex-1 rounded-xl bg-lime text-xs font-bold text-lime-ink disabled:cursor-wait disabled:opacity-60"
           disabled={isSaving}
           onClick={handleSave}
           type="button"
@@ -159,7 +159,7 @@ function EditMeasurementForm({ measurement, onCancel, onSaved }: EditMeasurement
           {isSaving ? "Saving…" : "Save changes"}
         </button>
         <button
-          className="min-h-10 rounded-xl border border-stone-300 px-4 text-xs font-semibold text-stone-700"
+          className="min-h-10 rounded-xl border border-line-strong px-4 text-xs font-semibold text-ink"
           disabled={isSaving}
           onClick={onCancel}
           type="button"
@@ -215,14 +215,14 @@ export const MeasurementFeed = forwardRef<MeasurementFeedHandle>(function Measur
     }
   }
 
-  if (state.status === "loading") return <div className="h-40 animate-pulse rounded-3xl bg-stone-100" />;
+  if (state.status === "loading") return <div className="h-40 animate-pulse rounded-3xl bg-surface-2" />;
   if (state.status === "error") {
-    return <p className="rounded-3xl bg-rose-50 p-6 text-sm text-rose-800">Measurement history could not be loaded.</p>;
+    return <p className="rounded-3xl bg-red/10 p-6 text-sm text-red">Measurement history could not be loaded.</p>;
   }
   if (state.measurements.length === 0) {
     return (
-      <div className="rounded-3xl border border-dashed border-stone-300 bg-white/50 p-6">
-        <p className="text-sm text-stone-500">No measurements logged yet.</p>
+      <div className="rounded-3xl border border-dashed border-line-strong bg-surface/50 p-6">
+        <p className="text-sm text-muted">No measurements logged yet.</p>
       </div>
     );
   }
@@ -235,19 +235,19 @@ export const MeasurementFeed = forwardRef<MeasurementFeedHandle>(function Measur
         const isOwner = currentUserId !== undefined && measurement.user_id === currentUserId;
         const isEditing = editingId === measurement.id;
         return (
-          <li className="rounded-2xl border border-stone-200 bg-white p-4" key={measurement.id}>
+          <li className="rounded-2xl border border-line bg-surface p-4" key={measurement.id}>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="font-semibold text-[#15221b]">{formatValues(measurement) || "Note"}</p>
-                <p className="mt-0.5 text-xs text-stone-500">
+                <p className="font-semibold text-ink">{formatValues(measurement) || "Note"}</p>
+                <p className="mt-0.5 text-xs text-muted">
                   {new Date(measurement.occurred_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
                 </p>
               </div>
-              <span className="shrink-0 rounded-full bg-[#f8ffe4] px-2.5 py-1 text-xs font-semibold text-[#567118]">
+              <span className="shrink-0 rounded-full bg-lime/10 px-2.5 py-1 text-xs font-semibold text-lime">
                 {measurement.visibility === "team" ? "Team" : "Private"}
               </span>
             </div>
-            {measurement.notes ? <p className="mt-2 text-sm text-stone-600">{measurement.notes}</p> : null}
+            {measurement.notes ? <p className="mt-2 text-sm text-muted">{measurement.notes}</p> : null}
             {isOwner && isEditing ? (
               <EditMeasurementForm
                 measurement={measurement}
@@ -261,14 +261,14 @@ export const MeasurementFeed = forwardRef<MeasurementFeedHandle>(function Measur
             {isOwner && !isEditing ? (
               <div className="mt-3 flex items-center gap-3">
                 <button
-                  className="text-xs font-semibold text-[#506b13] underline decoration-[#a4c72b] underline-offset-4"
+                  className="text-xs font-semibold text-lime underline decoration-lime underline-offset-4"
                   onClick={() => setEditingId(measurement.id)}
                   type="button"
                 >
                   Edit
                 </button>
                 <button
-                  className="text-xs font-semibold text-rose-700 underline decoration-rose-300 underline-offset-4 disabled:opacity-50"
+                  className="text-xs font-semibold text-red underline decoration-rose-300 underline-offset-4 disabled:opacity-50"
                   disabled={deletingId === measurement.id}
                   onClick={() => handleDelete(measurement.id)}
                   type="button"
@@ -278,7 +278,7 @@ export const MeasurementFeed = forwardRef<MeasurementFeedHandle>(function Measur
               </div>
             ) : null}
             {deleteErrorId === measurement.id ? (
-              <p className="mt-2 text-xs text-rose-700">This measurement could not be deleted.</p>
+              <p className="mt-2 text-xs text-red">This measurement could not be deleted.</p>
             ) : null}
           </li>
         );

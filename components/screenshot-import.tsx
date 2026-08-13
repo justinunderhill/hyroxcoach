@@ -77,34 +77,34 @@ export function ScreenshotImport({
     : [];
 
   return (
-    <div className="rounded-2xl border border-dashed border-stone-300 bg-[#fbfbf7] p-4">
-      <label className="block text-sm font-semibold text-stone-700">
+    <div className="rounded-2xl border border-dashed border-line-strong bg-surface p-4">
+      <label className="block text-sm font-semibold text-ink">
         {label}
         <input
           accept="image/jpeg,image/png,image/webp,image/heic"
           capture="environment"
-          className="mt-2 block w-full text-sm text-stone-600 file:mr-3 file:min-h-11 file:rounded-xl file:border-0 file:bg-[#f8ffe4] file:px-4 file:text-sm file:font-semibold file:text-[#567118]"
+          className="mt-2 block w-full text-sm text-muted file:mr-3 file:min-h-11 file:rounded-xl file:border-0 file:bg-lime/10 file:px-4 file:text-sm file:font-semibold file:text-lime"
           onChange={handleFileChange}
           type="file"
         />
       </label>
 
-      {state.status === "uploading" ? <p className="mt-2 text-xs text-stone-500">Uploading…</p> : null}
+      {state.status === "uploading" ? <p className="mt-2 text-xs text-muted">Uploading…</p> : null}
       {state.status === "extracting" ? (
-        <p className="mt-2 text-xs text-stone-500">Reading the photo…</p>
+        <p className="mt-2 text-xs text-muted">Reading the photo…</p>
       ) : null}
       {state.status === "failed" ? (
-        <p className="mt-2 text-xs text-rose-700">{state.message} The photo is still attached — fill in the details manually.</p>
+        <p className="mt-2 text-xs text-red">{state.message} The photo is still attached — fill in the details manually.</p>
       ) : null}
 
       {readyOrApplied ? (
-        <div className="mt-3 rounded-xl bg-white p-3">
-          <p className="text-sm text-stone-700">{summarize(state.result.extracted_data)}</p>
+        <div className="mt-3 rounded-xl bg-surface p-3">
+          <p className="text-sm text-ink">{summarize(state.result.extracted_data)}</p>
           {confidence !== null ? (
-            <p className="mt-1 text-xs text-stone-400">Confidence: {Math.round(confidence * 100)}%</p>
+            <p className="mt-1 text-xs text-faint">Confidence: {Math.round(confidence * 100)}%</p>
           ) : null}
           {uncertaintyNotes.length > 0 ? (
-            <ul className="mt-1 list-disc pl-4 text-xs text-stone-400">
+            <ul className="mt-1 list-disc pl-4 text-xs text-faint">
               {uncertaintyNotes.map((note) => (
                 <li key={note}>{note}</li>
               ))}
@@ -112,14 +112,14 @@ export function ScreenshotImport({
           ) : null}
           {state.status === "ready" ? (
             <button
-              className="mt-2 min-h-9 rounded-xl bg-[#15271e] px-3 text-xs font-bold text-white"
+              className="mt-2 min-h-9 rounded-xl bg-lime px-3 text-xs font-bold text-lime-ink"
               onClick={handleApply}
               type="button"
             >
               Use these values
             </button>
           ) : (
-            <p className="mt-2 text-xs font-semibold text-[#567118]">
+            <p className="mt-2 text-xs font-semibold text-lime">
               Applied — review the fields below before saving.
             </p>
           )}

@@ -133,10 +133,10 @@ export function MealForm({ onLogged }: MealFormProps) {
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block text-sm font-semibold text-stone-700 sm:col-span-2">
+        <label className="block text-sm font-semibold text-ink sm:col-span-2">
           What did you eat?
           <input
-            className="mt-2 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base outline-none focus:border-[#789416] focus:ring-4 focus:ring-[#d8ff62]/30"
+            className="mt-2 min-h-12 w-full rounded-2xl border border-line-strong px-4 text-base outline-none focus:border-lime focus:ring-4 focus:ring-lime/30"
             maxLength={500}
             name="description"
             placeholder="Oats, banana, protein shake"
@@ -145,10 +145,10 @@ export function MealForm({ onLogged }: MealFormProps) {
           />
         </label>
 
-        <label className="block text-sm font-semibold text-stone-700">
+        <label className="block text-sm font-semibold text-ink">
           Meal type
           <input
-            className="mt-2 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base outline-none focus:border-[#789416] focus:ring-4 focus:ring-[#d8ff62]/30"
+            className="mt-2 min-h-12 w-full rounded-2xl border border-line-strong px-4 text-base outline-none focus:border-lime focus:ring-4 focus:ring-lime/30"
             list="meal-type-options"
             maxLength={30}
             name="mealType"
@@ -163,10 +163,10 @@ export function MealForm({ onLogged }: MealFormProps) {
           </datalist>
         </label>
 
-        <label className="block text-sm font-semibold text-stone-700">
+        <label className="block text-sm font-semibold text-ink">
           When
           <input
-            className="mt-2 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base outline-none focus:border-[#789416] focus:ring-4 focus:ring-[#d8ff62]/30"
+            className="mt-2 min-h-12 w-full rounded-2xl border border-line-strong px-4 text-base outline-none focus:border-lime focus:ring-4 focus:ring-lime/30"
             defaultValue={nowForDatetimeLocal()}
             name="occurredAt"
             required
@@ -176,47 +176,47 @@ export function MealForm({ onLogged }: MealFormProps) {
       </div>
 
       <div className="grid grid-cols-4 gap-3">
-        <label className="text-xs font-semibold text-stone-500">
+        <label className="text-xs font-semibold text-muted">
           Calories
-          <input className="mt-1 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base" min={0} name="calories" ref={caloriesRef} type="number" />
+          <input className="mt-1 min-h-12 w-full rounded-2xl border border-line-strong px-4 text-base" min={0} name="calories" ref={caloriesRef} type="number" />
         </label>
-        <label className="text-xs font-semibold text-stone-500">
+        <label className="text-xs font-semibold text-muted">
           Protein, g
-          <input className="mt-1 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base" min={0} name="proteinG" step="0.1" type="number" />
+          <input className="mt-1 min-h-12 w-full rounded-2xl border border-line-strong px-4 text-base" min={0} name="proteinG" step="0.1" type="number" />
         </label>
-        <label className="text-xs font-semibold text-stone-500">
+        <label className="text-xs font-semibold text-muted">
           Carbs, g
-          <input className="mt-1 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base" min={0} name="carbsG" step="0.1" type="number" />
+          <input className="mt-1 min-h-12 w-full rounded-2xl border border-line-strong px-4 text-base" min={0} name="carbsG" step="0.1" type="number" />
         </label>
-        <label className="text-xs font-semibold text-stone-500">
+        <label className="text-xs font-semibold text-muted">
           Fat, g
-          <input className="mt-1 min-h-12 w-full rounded-2xl border border-stone-300 px-4 text-base" min={0} name="fatG" step="0.1" type="number" />
+          <input className="mt-1 min-h-12 w-full rounded-2xl border border-line-strong px-4 text-base" min={0} name="fatG" step="0.1" type="number" />
         </label>
       </div>
 
       <fieldset>
-        <legend className="text-sm font-semibold text-stone-700">Visibility</legend>
+        <legend className="text-sm font-semibold text-ink">Visibility</legend>
         <div className="mt-2 flex gap-3">
-          <label className="flex min-h-11 items-center gap-2 rounded-xl border border-stone-200 bg-[#fafaf7] px-3 text-sm text-stone-700">
-            <input defaultChecked className="accent-[#789416]" name="visibility" type="radio" value="private" />
+          <label className="flex min-h-11 items-center gap-2 rounded-xl border border-line bg-surface-2 px-3 text-sm text-ink">
+            <input defaultChecked className="accent-lime" name="visibility" type="radio" value="private" />
             Private
           </label>
-          <label className="flex min-h-11 items-center gap-2 rounded-xl border border-stone-200 bg-[#fafaf7] px-3 text-sm text-stone-700">
-            <input className="accent-[#789416]" name="visibility" type="radio" value="team" />
+          <label className="flex min-h-11 items-center gap-2 rounded-xl border border-line bg-surface-2 px-3 text-sm text-ink">
+            <input className="accent-lime" name="visibility" type="radio" value="team" />
             Share with team
           </label>
         </div>
       </fieldset>
 
-      <label className="block text-sm font-semibold text-stone-700">
-        Notes <span className="font-normal text-stone-400">(optional)</span>
-        <textarea className="mt-2 min-h-24 w-full rounded-2xl border border-stone-300 px-4 py-3 text-base" maxLength={2000} name="notes" />
+      <label className="block text-sm font-semibold text-ink">
+        Notes <span className="font-normal text-faint">(optional)</span>
+        <textarea className="mt-2 min-h-24 w-full rounded-2xl border border-line-strong px-4 py-3 text-base" maxLength={2000} name="notes" />
       </label>
 
-      {error ? <p aria-live="polite" className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-800">{error}</p> : null}
+      {error ? <p aria-live="polite" className="rounded-2xl bg-red/10 px-4 py-3 text-sm text-red">{error}</p> : null}
 
       <button
-        className="min-h-12 w-full rounded-2xl bg-[#15271e] px-5 py-3 text-sm font-bold text-white disabled:cursor-wait disabled:opacity-60"
+        className="min-h-12 w-full rounded-2xl bg-lime px-5 py-3 text-sm font-bold text-lime-ink disabled:cursor-wait disabled:opacity-60"
         disabled={isSubmitting}
         type="submit"
       >

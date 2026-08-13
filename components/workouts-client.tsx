@@ -12,7 +12,7 @@ export function WorkoutsClient() {
     <div className="space-y-10">
       <WorkoutForm onLogged={() => feedRef.current?.refresh()} />
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">Recent activity</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-faint">Recent activity</p>
         <div className="mt-3">
           <WorkoutFeed ref={feedRef} />
         </div>

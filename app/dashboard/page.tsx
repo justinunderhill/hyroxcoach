@@ -1,6 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { BottomNav } from "@/components/bottom-nav";
 import { ExerciseProgress } from "@/components/exercise-progress";
 import { GoalEventCard } from "@/components/goal-event-card";
 import { ProfileSummary } from "@/components/profile-summary";
@@ -20,60 +22,67 @@ export default async function DashboardPage() {
   if (!session?.user) redirect("/auth/sign-in");
 
   return (
-    <main className="min-h-screen px-5 py-8 sm:px-8 sm:py-12">
+    <main className="min-h-screen px-5 pb-28 pt-6 sm:px-8 sm:pt-10">
       <div className="mx-auto max-w-5xl">
         <header className="flex items-center justify-between gap-5">
-          <div>
-            <p className="text-sm text-stone-500">Signed in as {session.user.email}</p>
-            <h1 className="mt-1 text-3xl font-semibold tracking-[-0.045em] text-[#15221b]">Your dashboard</h1>
+          <Image alt="HYROX Coach" height={28} priority src="/logo.png" width={110} className="h-7 w-auto" />
+          <div className="flex items-center gap-3">
+            <span className="hidden text-xs text-muted sm:inline">{session.user.email}</span>
+            <SignOutButton />
           </div>
-          <SignOutButton />
         </header>
-        <section className="mt-8">
+
+        <section className="mt-6">
           <GoalEventCard />
         </section>
-        <section className="mt-6 grid gap-5 md:grid-cols-3">
+
+        <section className="mt-5">
+          <WeeklyStats />
+        </section>
+
+        <section className="mt-5 grid gap-4 sm:grid-cols-2">
           <ProfileSummary />
-          <div className="rounded-3xl border border-[#dbe998] bg-[#f8ffe4] p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">Log</p>
-            <h2 className="mt-2 text-xl font-semibold text-[#263711]">Log a workout</h2>
-            <p className="mt-2 text-sm leading-6 text-stone-600">Runs, MMA, strength, walks or HYROX-specific work.</p>
-            <Link className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-[#15271e] px-4 text-sm font-bold text-white" href="/workouts">Log workout</Link>
-            <Link className="mt-3 inline-flex min-h-11 items-center rounded-xl border border-[#263711]/20 px-4 text-sm font-semibold text-[#263711]" href="/cindy">Do Cindy</Link>
-          </div>
-          <div className="rounded-3xl border border-stone-200 bg-white p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">Log</p>
-            <h2 className="mt-2 text-xl font-semibold text-[#15221b]">Meals & measurements</h2>
-            <p className="mt-2 text-sm leading-6 text-stone-500">Track nutrition and bodyweight/waist trends.</p>
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Link className="inline-flex min-h-11 items-center rounded-xl border border-stone-300 px-4 text-sm font-semibold text-stone-700" href="/meals">Log meal</Link>
-              <Link className="inline-flex min-h-11 items-center rounded-xl border border-stone-300 px-4 text-sm font-semibold text-stone-700" href="/measurements">Log measurement</Link>
-              <Link className="inline-flex min-h-11 items-center rounded-xl border border-stone-300 px-4 text-sm font-semibold text-stone-700" href="/nutrition">Nutrition targets</Link>
-              <Link className="inline-flex min-h-11 items-center rounded-xl border border-stone-300 px-4 text-sm font-semibold text-stone-700" href="/steps">Log steps</Link>
+          <div className="rounded-3xl border border-line bg-surface p-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-faint">Log</p>
+            <h2 className="mt-2 text-lg font-semibold text-ink">Meals &amp; measurements</h2>
+            <p className="mt-2 text-sm leading-6 text-muted">Track nutrition and bodyweight/waist trends.</p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Link className="inline-flex min-h-10 items-center rounded-xl border border-line-strong px-3 text-xs font-semibold text-ink" href="/meals">Log meal</Link>
+              <Link className="inline-flex min-h-10 items-center rounded-xl border border-line-strong px-3 text-xs font-semibold text-ink" href="/measurements">Log measurement</Link>
+              <Link className="inline-flex min-h-10 items-center rounded-xl border border-line-strong px-3 text-xs font-semibold text-ink" href="/nutrition">Nutrition targets</Link>
+              <Link className="inline-flex min-h-10 items-center rounded-xl border border-line-strong px-3 text-xs font-semibold text-ink" href="/steps">Log steps</Link>
             </div>
           </div>
         </section>
-        <section className="mt-8">
-          <WeeklyStats />
-        </section>
-        <section className="mt-6 grid gap-5 md:grid-cols-2">
+
+        <section className="mt-5 scroll-mt-6" id="progress">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-faint">Progress</p>
           <ExerciseProgress />
-          <TeamComparison />
         </section>
-        <section className="mt-6">
-          <TeamInviteCard />
-        </section>
-        <section className="mt-6 grid gap-5 md:grid-cols-2">
-          <WeeklyReview />
-          <TeamWeeklyReview />
-        </section>
-        <section className="mt-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">Recent activity</p>
-          <div className="mt-3">
-            <WorkoutFeed />
+
+        <section className="mt-5 scroll-mt-6" id="team">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-faint">Team</p>
+          <div className="grid gap-4">
+            <TeamComparison />
+            <TeamInviteCard />
           </div>
         </section>
+
+        <section className="mt-5 scroll-mt-6" id="coach">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-faint">Coach</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <WeeklyReview />
+            <TeamWeeklyReview />
+          </div>
+        </section>
+
+        <section className="mt-5">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-faint">Recent activity</p>
+          <WorkoutFeed />
+        </section>
       </div>
+
+      <BottomNav />
     </main>
   );
 }

@@ -87,7 +87,7 @@ export function TeamInviteCard() {
 
   if (state.status === "loading" || state.status === "no-team") return null;
   if (state.status === "error") {
-    return <p className="rounded-3xl bg-rose-50 p-6 text-sm text-rose-800">{state.message}</p>;
+    return <p className="rounded-3xl bg-red/10 p-6 text-sm text-red">{state.message}</p>;
   }
 
   const { team, invites } = state;
@@ -95,10 +95,10 @@ export function TeamInviteCard() {
   const hasPartner = team.members.length >= 2;
 
   return (
-    <div className="rounded-3xl border border-stone-200 bg-white p-6">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">Team</p>
-      <h3 className="mt-2 text-sm font-semibold text-[#15221b]">{team.name}</h3>
-      <ul className="mt-3 space-y-1 text-sm text-stone-600">
+    <div className="rounded-3xl border border-line bg-surface p-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-faint">Team</p>
+      <h3 className="mt-2 text-sm font-semibold text-ink">{team.name}</h3>
+      <ul className="mt-3 space-y-1 text-sm text-muted">
         {team.members.map((member) => (
           <li key={member.user_id}>
             {member.display_name}
@@ -108,19 +108,19 @@ export function TeamInviteCard() {
       </ul>
 
       {hasPartner ? (
-        <p className="mt-4 text-xs text-stone-400">Your team is complete.</p>
+        <p className="mt-4 text-xs text-faint">Your team is complete.</p>
       ) : (
         <div className="mt-4">
           {freshLink ? (
-            <div className="rounded-2xl bg-[#f8ffe4] p-4">
-              <p className="text-xs font-semibold text-[#38500e]">
+            <div className="rounded-2xl bg-lime/10 p-4">
+              <p className="text-xs font-semibold text-lime">
                 Share this link with your partner — it&apos;s only shown once.
               </p>
-              <p className="mt-2 break-all rounded-xl bg-white px-3 py-2 text-xs text-stone-600">
+              <p className="mt-2 break-all rounded-xl bg-surface px-3 py-2 text-xs text-muted">
                 {freshLink}
               </p>
               <button
-                className="mt-3 min-h-9 rounded-xl border border-[#263711]/20 px-3 text-xs font-semibold text-[#263711]"
+                className="mt-3 min-h-9 rounded-xl border border-line-strong px-3 text-xs font-semibold text-ink"
                 onClick={handleCopy}
                 type="button"
               >
@@ -128,17 +128,17 @@ export function TeamInviteCard() {
               </button>
             </div>
           ) : pending ? (
-            <p className="text-xs text-stone-500">
+            <p className="text-xs text-muted">
               Invite pending, expires{" "}
               {new Date(pending.expires_at).toLocaleDateString()}. Generate a new one if the link
               was lost.
             </p>
           ) : null}
 
-          {error ? <p className="mt-2 text-xs text-rose-700">{error}</p> : null}
+          {error ? <p className="mt-2 text-xs text-red">{error}</p> : null}
 
           <button
-            className="mt-3 min-h-10 rounded-xl bg-[#15271e] px-4 text-xs font-bold text-white disabled:opacity-60"
+            className="mt-3 min-h-10 rounded-xl bg-lime px-4 text-xs font-bold text-lime-ink disabled:opacity-60"
             disabled={isCreating}
             onClick={handleInvite}
             type="button"

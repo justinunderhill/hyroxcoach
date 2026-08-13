@@ -41,18 +41,18 @@ export function JoinTeamAction({ token }: { token: string }) {
   }, [token, router]);
 
   if (state.status === "accepting") {
-    return <p className="mt-6 text-sm text-stone-500">Joining the team…</p>;
+    return <p className="mt-6 text-sm text-muted">Joining the team…</p>;
   }
 
   if (state.status === "success") {
     return (
-      <p className="mt-6 rounded-2xl bg-[#f8ffe4] px-4 py-3 text-sm text-[#38500e]">
+      <p className="mt-6 rounded-2xl bg-lime/10 px-4 py-3 text-sm text-lime">
         You&apos;ve joined {state.teamName}. Taking you to your dashboard…
       </p>
     );
   }
 
   return (
-    <p className="mt-6 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-800">{state.message}</p>
+    <p className="mt-6 rounded-2xl bg-red/10 px-4 py-3 text-sm text-red">{state.message}</p>
   );
 }

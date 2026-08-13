@@ -81,25 +81,25 @@ export function ExerciseProgress() {
     return () => controller.abort();
   }, []);
 
-  if (state.status === "loading") return <div className="h-40 animate-pulse rounded-3xl bg-stone-100" />;
+  if (state.status === "loading") return <div className="h-40 animate-pulse rounded-3xl bg-surface-2" />;
   if (state.status === "error") return null;
 
   const { station_history, personal_bests } = state.analytics;
   if (station_history.length === 0 && personal_bests.length === 0) return null;
 
   return (
-    <div className="rounded-3xl border border-stone-200 bg-white p-6">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">Progression</p>
+    <div className="rounded-3xl border border-line bg-surface p-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-faint">Progression</p>
       {personal_bests.length > 0 ? (
         <div className="mt-3">
-          <h3 className="text-sm font-semibold text-[#15221b]">Personal bests</h3>
+          <h3 className="text-sm font-semibold text-ink">Personal bests</h3>
           <ul className="mt-2 space-y-1.5">
             {personal_bests.slice(0, 6).map((best) => (
               <li key={best.exercise_key} className="flex items-center justify-between text-sm">
-                <span className="text-stone-600">{best.exercise_name}</span>
-                <span className="font-semibold text-[#15221b]">
+                <span className="text-muted">{best.exercise_name}</span>
+                <span className="font-semibold text-ink">
                   {formatMetric(best.metric, best.best_value)}
-                  {best.is_current ? <span className="ml-2 text-xs font-bold text-[#3c6b2f]">PB</span> : null}
+                  {best.is_current ? <span className="ml-2 text-xs font-bold text-lime">PB</span> : null}
                 </span>
               </li>
             ))}
@@ -108,12 +108,12 @@ export function ExerciseProgress() {
       ) : null}
       {station_history.length > 0 ? (
         <div className="mt-5">
-          <h3 className="text-sm font-semibold text-[#15221b]">HYROX stations</h3>
+          <h3 className="text-sm font-semibold text-ink">HYROX stations</h3>
           <ul className="mt-2 space-y-1.5">
             {station_history.map((station) => (
               <li key={station.exercise_key} className="flex items-center justify-between text-sm">
-                <span className="text-stone-600">{station.exercise_name}</span>
-                <span className="text-xs text-stone-500">{trendLabel(station.trend)}</span>
+                <span className="text-muted">{station.exercise_name}</span>
+                <span className="text-xs text-muted">{trendLabel(station.trend)}</span>
               </li>
             ))}
           </ul>

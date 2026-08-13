@@ -35,24 +35,24 @@ export function ProfileSummary() {
     return () => controller.abort();
   }, []);
 
-  if (state.status === "loading") return <div className="h-32 animate-pulse rounded-3xl bg-stone-100" />;
+  if (state.status === "loading") return <div className="h-32 animate-pulse rounded-3xl bg-surface-2" />;
   if (state.status === "empty") {
     return (
-      <div className="rounded-3xl border border-[#dbe998] bg-[#f8ffe4] p-6">
-        <h2 className="font-semibold text-[#263711]">Complete your athlete profile</h2>
-        <p className="mt-2 text-sm text-stone-600">Add your timezone and training availability before creating a team.</p>
-        <Link className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-[#15271e] px-4 text-sm font-bold text-white" href="/onboarding">Finish onboarding</Link>
+      <div className="rounded-3xl border border-lime/30 bg-lime/10 p-6">
+        <h2 className="font-semibold text-ink">Complete your athlete profile</h2>
+        <p className="mt-2 text-sm text-muted">Add your timezone and training availability before creating a team.</p>
+        <Link className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-lime px-4 text-sm font-bold text-lime-ink" href="/onboarding">Finish onboarding</Link>
       </div>
     );
   }
-  if (state.status === "error") return <p className="rounded-3xl bg-rose-50 p-6 text-sm text-rose-800">Your profile could not be loaded.</p>;
+  if (state.status === "error") return <p className="rounded-3xl bg-red/10 p-6 text-sm text-red">Your profile could not be loaded.</p>;
 
   return (
-    <div className="rounded-3xl border border-stone-200 bg-white p-6">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">Athlete</p>
-      <h2 className="mt-2 text-2xl font-semibold tracking-[-0.035em] text-[#15221b]">{state.profile.display_name}</h2>
-      <p className="mt-1 text-sm text-stone-500">{state.profile.timezone}</p>
-      <p className="mt-5 text-sm text-stone-600">{state.profile.training_days.length ? `Available ${state.profile.training_days.join(", ")}` : "Training availability not set yet."}</p>
+    <div className="rounded-3xl border border-line bg-surface p-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-faint">Athlete</p>
+      <h2 className="mt-2 text-2xl font-semibold tracking-[-0.035em] text-ink">{state.profile.display_name}</h2>
+      <p className="mt-1 text-sm text-muted">{state.profile.timezone}</p>
+      <p className="mt-5 text-sm text-muted">{state.profile.training_days.length ? `Available ${state.profile.training_days.join(", ")}` : "Training availability not set yet."}</p>
     </div>
   );
 }

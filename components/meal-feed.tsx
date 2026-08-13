@@ -95,28 +95,28 @@ function EditMealForm({ meal, onCancel, onSaved }: EditMealFormProps) {
   }
 
   return (
-    <div className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-[#fafaf7] p-3">
-      <label className="block text-xs font-semibold text-stone-600">
+    <div className="mt-3 space-y-3 rounded-xl border border-line bg-surface-2 p-3">
+      <label className="block text-xs font-semibold text-muted">
         Description
         <input
-          className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+          className="mt-1 min-h-11 w-full rounded-xl border border-line-strong px-3 text-sm"
           onChange={(event) => setDescription(event.target.value)}
           value={description}
         />
       </label>
       <div className="grid grid-cols-2 gap-3">
-        <label className="block text-xs font-semibold text-stone-600">
+        <label className="block text-xs font-semibold text-muted">
           Meal type
           <input
-            className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+            className="mt-1 min-h-11 w-full rounded-xl border border-line-strong px-3 text-sm"
             onChange={(event) => setMealType(event.target.value)}
             value={mealType}
           />
         </label>
-        <label className="block text-xs font-semibold text-stone-600">
+        <label className="block text-xs font-semibold text-muted">
           When
           <input
-            className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+            className="mt-1 min-h-11 w-full rounded-xl border border-line-strong px-3 text-sm"
             onChange={(event) => setOccurredAt(event.target.value)}
             type="datetime-local"
             value={occurredAt}
@@ -124,39 +124,39 @@ function EditMealForm({ meal, onCancel, onSaved }: EditMealFormProps) {
         </label>
       </div>
       <div className="grid grid-cols-4 gap-3">
-        <label className="block text-xs font-semibold text-stone-600">
+        <label className="block text-xs font-semibold text-muted">
           Calories
           <input
-            className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+            className="mt-1 min-h-11 w-full rounded-xl border border-line-strong px-3 text-sm"
             onChange={(event) => setCalories(event.target.value)}
             type="number"
             value={calories}
           />
         </label>
-        <label className="block text-xs font-semibold text-stone-600">
+        <label className="block text-xs font-semibold text-muted">
           Protein
           <input
-            className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+            className="mt-1 min-h-11 w-full rounded-xl border border-line-strong px-3 text-sm"
             onChange={(event) => setProteinG(event.target.value)}
             step="0.1"
             type="number"
             value={proteinG}
           />
         </label>
-        <label className="block text-xs font-semibold text-stone-600">
+        <label className="block text-xs font-semibold text-muted">
           Carbs
           <input
-            className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+            className="mt-1 min-h-11 w-full rounded-xl border border-line-strong px-3 text-sm"
             onChange={(event) => setCarbsG(event.target.value)}
             step="0.1"
             type="number"
             value={carbsG}
           />
         </label>
-        <label className="block text-xs font-semibold text-stone-600">
+        <label className="block text-xs font-semibold text-muted">
           Fat
           <input
-            className="mt-1 min-h-11 w-full rounded-xl border border-stone-300 px-3 text-sm"
+            className="mt-1 min-h-11 w-full rounded-xl border border-line-strong px-3 text-sm"
             onChange={(event) => setFatG(event.target.value)}
             step="0.1"
             type="number"
@@ -164,31 +164,31 @@ function EditMealForm({ meal, onCancel, onSaved }: EditMealFormProps) {
           />
         </label>
       </div>
-      <label className="block text-xs font-semibold text-stone-600">
+      <label className="block text-xs font-semibold text-muted">
         Notes
         <textarea
-          className="mt-1 min-h-16 w-full rounded-xl border border-stone-300 px-3 py-2 text-sm"
+          className="mt-1 min-h-16 w-full rounded-xl border border-line-strong px-3 py-2 text-sm"
           onChange={(event) => setNotes(event.target.value)}
           value={notes}
         />
       </label>
       <fieldset>
-        <legend className="text-xs font-semibold text-stone-600">Visibility</legend>
+        <legend className="text-xs font-semibold text-muted">Visibility</legend>
         <div className="mt-1 flex gap-3">
-          <label className="flex items-center gap-1.5 text-xs text-stone-700">
+          <label className="flex items-center gap-1.5 text-xs text-ink">
             <input checked={visibility === "private"} onChange={() => setVisibility("private")} type="radio" />
             Private
           </label>
-          <label className="flex items-center gap-1.5 text-xs text-stone-700">
+          <label className="flex items-center gap-1.5 text-xs text-ink">
             <input checked={visibility === "team"} onChange={() => setVisibility("team")} type="radio" />
             Team
           </label>
         </div>
       </fieldset>
-      {error ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-800">{error}</p> : null}
+      {error ? <p className="rounded-xl bg-red/10 px-3 py-2 text-xs text-red">{error}</p> : null}
       <div className="flex gap-2">
         <button
-          className="min-h-10 flex-1 rounded-xl bg-[#15271e] text-xs font-bold text-white disabled:cursor-wait disabled:opacity-60"
+          className="min-h-10 flex-1 rounded-xl bg-lime text-xs font-bold text-lime-ink disabled:cursor-wait disabled:opacity-60"
           disabled={isSaving}
           onClick={handleSave}
           type="button"
@@ -196,7 +196,7 @@ function EditMealForm({ meal, onCancel, onSaved }: EditMealFormProps) {
           {isSaving ? "Saving…" : "Save changes"}
         </button>
         <button
-          className="min-h-10 rounded-xl border border-stone-300 px-4 text-xs font-semibold text-stone-700"
+          className="min-h-10 rounded-xl border border-line-strong px-4 text-xs font-semibold text-ink"
           disabled={isSaving}
           onClick={onCancel}
           type="button"
@@ -263,14 +263,14 @@ export const MealFeed = forwardRef<MealFeedHandle>(function MealFeed(_props, ref
     }
   }
 
-  if (state.status === "loading") return <div className="h-40 animate-pulse rounded-3xl bg-stone-100" />;
+  if (state.status === "loading") return <div className="h-40 animate-pulse rounded-3xl bg-surface-2" />;
   if (state.status === "error") {
-    return <p className="rounded-3xl bg-rose-50 p-6 text-sm text-rose-800">Meal history could not be loaded.</p>;
+    return <p className="rounded-3xl bg-red/10 p-6 text-sm text-red">Meal history could not be loaded.</p>;
   }
   if (state.meals.length === 0) {
     return (
-      <div className="rounded-3xl border border-dashed border-stone-300 bg-white/50 p-6">
-        <p className="text-sm text-stone-500">No meals logged yet.</p>
+      <div className="rounded-3xl border border-dashed border-line-strong bg-surface/50 p-6">
+        <p className="text-sm text-muted">No meals logged yet.</p>
       </div>
     );
   }
@@ -283,29 +283,29 @@ export const MealFeed = forwardRef<MealFeedHandle>(function MealFeed(_props, ref
         const isOwner = currentUserId !== undefined && meal.user_id === currentUserId;
         const isEditing = editingId === meal.id;
         return (
-          <li className="rounded-2xl border border-stone-200 bg-white p-4" key={meal.id}>
+          <li className="rounded-2xl border border-line bg-surface p-4" key={meal.id}>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="font-semibold text-[#15221b]">
+                <p className="font-semibold text-ink">
                   {meal.meal_type ? `${meal.meal_type[0].toUpperCase()}${meal.meal_type.slice(1)} — ` : ""}
                   {meal.description}
                 </p>
-                <p className="mt-0.5 text-xs text-stone-500">
+                <p className="mt-0.5 text-xs text-muted">
                   {new Date(meal.occurred_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
                 </p>
               </div>
-              <span className="shrink-0 rounded-full bg-[#f8ffe4] px-2.5 py-1 text-xs font-semibold text-[#567118]">
+              <span className="shrink-0 rounded-full bg-lime/10 px-2.5 py-1 text-xs font-semibold text-lime">
                 {meal.visibility === "team" ? "Team" : "Private"}
               </span>
             </div>
-            {formatMacros(meal) ? <p className="mt-2 text-sm text-stone-600">{formatMacros(meal)}</p> : null}
+            {formatMacros(meal) ? <p className="mt-2 text-sm text-muted">{formatMacros(meal)}</p> : null}
             {(state.mediaByMealId.get(meal.id) ?? []).length > 0 ? (
               <div className="mt-3 flex gap-2">
                 {(state.mediaByMealId.get(meal.id) ?? []).map((item) => (
                   <a href={item.view_url} key={item.media_asset.id} rel="noreferrer" target="_blank">
                     <img
                       alt="Meal photo"
-                      className="size-16 rounded-xl border border-stone-200 object-cover"
+                      className="size-16 rounded-xl border border-line object-cover"
                       src={item.view_url}
                     />
                   </a>
@@ -325,14 +325,14 @@ export const MealFeed = forwardRef<MealFeedHandle>(function MealFeed(_props, ref
             {isOwner && !isEditing ? (
               <div className="mt-3 flex items-center gap-3">
                 <button
-                  className="text-xs font-semibold text-[#506b13] underline decoration-[#a4c72b] underline-offset-4"
+                  className="text-xs font-semibold text-lime underline decoration-lime underline-offset-4"
                   onClick={() => setEditingId(meal.id)}
                   type="button"
                 >
                   Edit
                 </button>
                 <button
-                  className="text-xs font-semibold text-rose-700 underline decoration-rose-300 underline-offset-4 disabled:opacity-50"
+                  className="text-xs font-semibold text-red underline decoration-rose-300 underline-offset-4 disabled:opacity-50"
                   disabled={deletingId === meal.id}
                   onClick={() => handleDelete(meal.id)}
                   type="button"
@@ -342,7 +342,7 @@ export const MealFeed = forwardRef<MealFeedHandle>(function MealFeed(_props, ref
               </div>
             ) : null}
             {deleteErrorId === meal.id ? (
-              <p className="mt-2 text-xs text-rose-700">This meal could not be deleted.</p>
+              <p className="mt-2 text-xs text-red">This meal could not be deleted.</p>
             ) : null}
           </li>
         );
