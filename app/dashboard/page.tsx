@@ -25,7 +25,7 @@ export default async function DashboardPage() {
     <main className="min-h-screen px-5 pb-28 pt-6 sm:px-8 sm:pt-10">
       <div className="mx-auto max-w-5xl">
         <header className="flex items-center justify-between gap-5">
-          <Image alt="HYROX Coach" height={28} priority src="/logo.png" width={110} className="h-7 w-auto" />
+          <Image alt="HYROX Coach" height={36} priority src="/logo.png" width={141} className="h-9 w-auto" />
           <div className="flex items-center gap-3">
             <span className="hidden text-xs text-muted sm:inline">{session.user.email}</span>
             <SignOutButton />

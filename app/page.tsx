@@ -13,7 +13,7 @@ export default function Home() {
     <main className="min-h-screen px-5 py-6 sm:px-8 sm:py-10">
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-6xl flex-col overflow-hidden rounded-[2rem] border border-line bg-surface shadow-[0_30px_90px_rgba(0,0,0,0.45)] sm:min-h-[calc(100vh-5rem)]">
         <header className="flex items-center justify-between border-b border-line px-6 py-5 sm:px-10">
-          <Image alt="HYROX Coach" height={44} priority src="/logo.png" width={170} className="h-11 w-auto" />
+          <Image alt="HYROX Coach" height={56} priority src="/logo.png" width={216} className="h-14 w-auto" />
           <Link
             className="min-h-10 rounded-full border border-lime/30 bg-lime/10 px-4 py-2 text-xs font-semibold text-lime"
             href="/auth/sign-in"
