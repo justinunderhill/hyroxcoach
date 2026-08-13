@@ -1,5 +1,7 @@
+import os
 from uuid import uuid4
 
+import sentry_sdk
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,6 +21,12 @@ from api.routers.steps import router as steps_router
 from api.routers.teams import invite_router as team_invites_router
 from api.routers.teams import router as teams_router
 from api.routers.workouts import router as workouts_router
+
+sentry_sdk.init(
+    dsn=os.getenv("NEXT_PUBLIC_SENTRY_DSN"),
+    traces_sample_rate=0.1,
+    environment=os.getenv("VERCEL_ENV", "development"),
+)
 
 
 class HealthResponse(BaseModel):
