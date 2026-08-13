@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { NutritionClient } from "@/components/nutrition-client";
+import { PageHeader } from "@/components/page-header";
 import { getServerAuth } from "@/lib/auth/server";
 
 export const dynamic = "force-dynamic";
@@ -12,8 +13,7 @@ export default async function NutritionPage() {
   return (
     <main className="min-h-screen px-5 py-8 sm:px-8 sm:py-12">
       <div className="mx-auto max-w-2xl">
-        <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-lime">Nutrition</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-[-0.045em] text-ink">Daily targets</h1>
+        <PageHeader eyebrow="Nutrition" title="Daily targets" />
         <p className="mt-2 text-sm leading-6 text-muted">Set optional calorie/macro targets and track today against them.</p>
 
         <section className="mt-8">
