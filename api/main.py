@@ -102,8 +102,3 @@ async def handle_validation_exception(
 @app.get("/api/health", response_model=HealthResponse, tags=["system"])
 async def health() -> HealthResponse:
     return HealthResponse(status="ok", service="hyrox-coach-api")
-
-
-@app.get("/api/debug-sentry", tags=["system"])
-async def debug_sentry() -> None:
-    raise RuntimeError("Test error to verify Sentry error reporting is wired up.")
