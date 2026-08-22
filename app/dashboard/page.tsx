@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { BottomNav } from "@/components/bottom-nav";
 import { ExerciseProgress } from "@/components/exercise-progress";
 import { GoalEventCard } from "@/components/goal-event-card";
+import { InstallPrompt } from "@/components/install-prompt";
 import { ProfileSummary } from "@/components/profile-summary";
 import { SignOutButton } from "@/components/sign-out-button";
 import { TeamComparison } from "@/components/team-comparison";
@@ -83,6 +84,7 @@ export default async function DashboardPage() {
       </div>
 
       <BottomNav />
+      <InstallPrompt />
     </main>
   );
 }

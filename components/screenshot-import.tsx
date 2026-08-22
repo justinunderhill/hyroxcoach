@@ -2,6 +2,7 @@
 
 import { ChangeEvent, useState } from "react";
 
+import { compressImage } from "@/lib/image-compression";
 import {
   ExtractionResult,
   ExtractionType,
@@ -43,7 +44,8 @@ export function ScreenshotImport({
 
     setState({ status: "uploading" });
     try {
-      const mediaAssetId = await uploadMediaAsset(file, purpose);
+      const compressed = await compressImage(file);
+      const mediaAssetId = await uploadMediaAsset(compressed, purpose);
       onMediaUploaded(mediaAssetId);
 
       setState({ status: "extracting" });
@@ -82,7 +84,6 @@ export function ScreenshotImport({
         {label}
         <input
           accept="image/jpeg,image/png,image/webp,image/heic"
-          capture="environment"
           className="mt-2 block w-full text-sm text-muted file:mr-3 file:min-h-11 file:rounded-xl file:border-0 file:bg-lime/10 file:px-4 file:text-sm file:font-semibold file:text-lime"
           onChange={handleFileChange}
           type="file"
