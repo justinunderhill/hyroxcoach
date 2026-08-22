@@ -22,20 +22,19 @@ Create or update editable profile fields for the verified token subject. Initial
 
 ## Teams
 
-### POST `/api/teams`
-Create a team. Not yet implemented — a solo team is auto-created on first `PATCH /api/me` instead (see Profiles).
+There is no `POST /api/teams` — a solo team (one active member, the owner) is auto-created on first `PATCH /api/me` instead (see Profiles). Every team caps at two active members; there is no larger squad/roster mode.
 
 ### GET `/api/teams/{team_id}`
-Return team metadata if requester is a member. Not yet implemented.
+Return team metadata and the full member roster (`user_id`, `display_name`, `role`, `status`) if the requester is an active member. 404 if not a member (existence is not leaked to non-members).
 
 ### POST `/api/teams/{team_id}/invites`
-Create partner invite. Not yet implemented — there is currently no way to add a second athlete to a team via the app; team membership rows must be created directly.
+Create a single-use invite token for a second athlete. Requester must be an active team member. Returns the plaintext token once (`TeamInviteCreateResponse`) — it is never stored or retrievable again, only its hash is persisted. Rejected with 422 if the team already has two active members.
+
+### GET `/api/teams/{team_id}/invites`
+List the team's invites (most recent first), without the plaintext token.
 
 ### POST `/api/team-invites/{token}/accept`
-Accept invite. Not yet implemented.
-
-### GET `/api/teams/{team_id}/dashboard`
-Return deterministic team dashboard DTO. Not yet implemented — see `GET /api/analytics/team/{team_id}` for the closest existing equivalent.
+Accept an invite by its plaintext token. The accepting user does not need to already be a team member — access is proven by holding the token itself. Rejected with 404 if the token doesn't exist or was already used, 410 if expired or already accepted, 422 if the target team already has two active members. Accepting supersedes any other team the athlete was previously active on (past records keep their original `team_id`).
 
 ### GET `/api/teams/{team_id}/goal-event`
 Return the team's target event, or `null` if unset (same null-not-404 pattern as `GET /api/me`).
@@ -46,14 +45,17 @@ Create or replace the team's single target event. Any active team member may set
 Body:
 ```json
 {
-  "name": "HYROX Doubles London",
+  "name": "HYROX London",
+  "event_type": "hyrox_singles",
   "event_date": "2026-11-01",
   "division": "Open",
   "location": "ExCeL London"
 }
 ```
 
-Response adds a server-computed `days_until_event` (may be negative once the event has passed).
+`event_type` is `hyrox_singles` or `hyrox_doubles`.
+
+Response adds server-computed `days_until_event` (may be negative once the event has passed) and `is_taper_week` (final 7 days before the event, inclusive of race day).
 
 ## Workouts
 
