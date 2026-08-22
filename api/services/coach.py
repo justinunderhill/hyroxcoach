@@ -10,12 +10,13 @@ api/services/coach_context.py respectively.
 
 import hashlib
 import json
+import logging
 from datetime import date
 from typing import Any
 from uuid import UUID
 
+import sentry_sdk
 from fastapi import HTTPException, status
-from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -46,6 +47,8 @@ SYSTEM_PROMPT = (
 )
 
 GENERATION_FAILED_DETAIL = "The coach could not generate a review right now. Try again shortly."
+
+logger = logging.getLogger(__name__)
 
 
 def context_hash(context: dict[str, Any]) -> str:
@@ -123,14 +126,14 @@ def generate_insight(
             SYSTEM_PROMPT, user_prompt, CoachInsightData.model_json_schema()
         )
         parsed = CoachInsightData.model_validate(json.loads(raw))
-    except (ValidationError, ValueError, json.JSONDecodeError):
+    except Exception as exc:
+        logger.exception(
+            "Coach insight generation failed (scope=%s, team_id=%s)", scope, team_id
+        )
+        sentry_sdk.capture_exception(exc)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY, detail=GENERATION_FAILED_DETAIL
-        ) from None
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY, detail=GENERATION_FAILED_DETAIL
-        ) from None
+        ) from exc
 
     insight = CoachInsight(
         scope=scope,
