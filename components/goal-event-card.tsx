@@ -4,13 +4,14 @@ import { FormEvent, useEffect, useState } from "react";
 
 import { authenticatedFetch } from "@/lib/auth/client";
 import { getGoalEvent, GoalEvent, upsertGoalEvent } from "@/lib/goal-event";
+import { getTeam } from "@/lib/team";
 
 type State =
   | { status: "loading-team" }
   | { status: "no-team" }
   | { status: "loading"; teamId: string }
-  | { status: "ready"; teamId: string; goalEvent: GoalEvent | null }
-  | { status: "editing"; teamId: string; goalEvent: GoalEvent | null }
+  | { status: "ready"; teamId: string; goalEvent: GoalEvent | null; hasPartner: boolean }
+  | { status: "editing"; teamId: string; goalEvent: GoalEvent | null; hasPartner: boolean }
   | { status: "error"; teamId: string; message: string };
 
 export function GoalEventCard() {
@@ -30,8 +31,11 @@ export function GoalEventCard() {
           return;
         }
         setState({ status: "loading", teamId });
-        const goalEvent = await getGoalEvent(teamId, controller.signal);
-        setState({ status: "ready", teamId, goalEvent });
+        const [goalEvent, team] = await Promise.all([
+          getGoalEvent(teamId, controller.signal),
+          getTeam(teamId, controller.signal),
+        ]);
+        setState({ status: "ready", teamId, goalEvent, hasPartner: team.members.length >= 2 });
       })
       .catch((fetchError: unknown) => {
         if (fetchError instanceof DOMException && fetchError.name === "AbortError") return;
@@ -50,11 +54,12 @@ export function GoalEventCard() {
     try {
       const goalEvent = await upsertGoalEvent(state.teamId, {
         name: String(data.get("name") ?? "").trim(),
+        event_type: data.get("eventType") === "hyrox_singles" ? "hyrox_singles" : "hyrox_doubles",
         event_date: String(data.get("eventDate") ?? ""),
         division: String(data.get("division") ?? "").trim() || null,
         location: String(data.get("location") ?? "").trim() || null,
       });
-      setState({ status: "ready", teamId: state.teamId, goalEvent });
+      setState({ status: "ready", teamId: state.teamId, goalEvent, hasPartner: state.hasPartner });
     } catch (submissionError) {
       setError(
         submissionError instanceof Error
@@ -84,9 +89,20 @@ export function GoalEventCard() {
               defaultValue={goalEvent?.name}
               maxLength={120}
               name="name"
-              placeholder="HYROX Doubles London"
+              placeholder="HYROX London"
               required
             />
+          </label>
+          <label className="block text-xs font-semibold text-lime">
+            Race format
+            <select
+              className="mt-1 min-h-11 w-full rounded-xl border border-lime/30 bg-surface px-3 text-sm text-ink"
+              defaultValue={goalEvent?.event_type ?? (state.hasPartner ? "hyrox_doubles" : "hyrox_singles")}
+              name="eventType"
+            >
+              <option value="hyrox_singles">Singles (solo)</option>
+              <option value="hyrox_doubles">Doubles</option>
+            </select>
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-xs font-semibold text-lime">
@@ -130,7 +146,9 @@ export function GoalEventCard() {
             </button>
             <button
               className="min-h-10 rounded-xl border border-line-strong px-4 text-xs font-semibold text-ink"
-              onClick={() => setState({ status: "ready", teamId: state.teamId, goalEvent })}
+              onClick={() =>
+                setState({ status: "ready", teamId: state.teamId, goalEvent, hasPartner: state.hasPartner })
+              }
               type="button"
             >
               Cancel
@@ -145,7 +163,7 @@ export function GoalEventCard() {
     return <p className="rounded-3xl bg-red/10 p-6 text-sm text-red">{state.message}</p>;
   }
 
-  const { goalEvent, teamId } = state;
+  const { goalEvent, teamId, hasPartner } = state;
 
   if (goalEvent) {
     return (
@@ -162,7 +180,7 @@ export function GoalEventCard() {
           </div>
           <button
             className="min-h-9 shrink-0 rounded-xl border border-line-strong px-3 text-xs font-semibold text-ink"
-            onClick={() => setState({ status: "editing", teamId, goalEvent })}
+            onClick={() => setState({ status: "editing", teamId, goalEvent, hasPartner })}
             type="button"
           >
             Edit
@@ -190,7 +208,7 @@ export function GoalEventCard() {
       </p>
       <button
         className="mt-4 min-h-9 rounded-xl border border-line-strong px-3 text-xs font-semibold text-ink"
-        onClick={() => setState({ status: "editing", teamId, goalEvent })}
+        onClick={() => setState({ status: "editing", teamId, goalEvent, hasPartner })}
         type="button"
       >
         Set target event

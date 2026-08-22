@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-EventType = Literal["hyrox_doubles"]
+EventType = Literal["hyrox_singles", "hyrox_doubles"]
 
 
 class GoalEventUpsert(BaseModel):

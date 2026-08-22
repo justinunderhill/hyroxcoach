@@ -13,7 +13,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "HYROX Coach",
-  description: "Shared HYROX Doubles preparation, grounded in real training data.",
+  description: "HYROX preparation for solo athletes and Doubles pairs, grounded in real training data.",
 };
 
 export const viewport: Viewport = {

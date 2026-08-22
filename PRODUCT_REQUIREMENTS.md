@@ -2,9 +2,9 @@
 
 ## 1. Product vision
 
-Create a shared HYROX Doubles coaching application where two athletes can independently log their preparation while seeing how they are progressing as a team.
+Create a HYROX coaching application that works equally well for a single athlete training solo (HYROX Singles) and for two athletes training together (HYROX Doubles) — each logs their own preparation independently, and a pair also sees how they are progressing as a team.
 
-The application should behave like a lightweight performance operating system for a HYROX pair.
+The application should behave like a lightweight performance operating system for a HYROX athlete, solo or paired. There is no larger team/squad mode — a team caps at exactly two athletes.
 
 ## 2. Primary users
 
@@ -35,10 +35,10 @@ A shared logical space containing:
 ### Requirements
 - Email/password or magic-link authentication.
 - Athlete creates display name and profile.
-- One athlete can create a team.
-- Team creator can invite partner via secure invite link/code.
+- A solo team is created automatically for every new athlete — training solo requires no extra setup.
+- Team creator can optionally invite one partner via secure invite link/code to upgrade to a Doubles pair (capped at two athletes; no larger team/squad mode).
 - Each user can belong to the team after accepting invitation.
-- Target event date and competition format are stored on the team.
+- Target event date and competition format (Singles or Doubles) are stored on the team.
 
 ### Onboarding questions
 Keep onboarding short:

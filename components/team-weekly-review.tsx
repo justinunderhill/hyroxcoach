@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { CoachInsightCard } from "@/components/coach-insight-card";
 import { authenticatedFetch } from "@/lib/auth/client";
 import { CoachInsightResponse, getTeamWeeklyReview } from "@/lib/coach";
+import { getTeam } from "@/lib/team";
 
 type State =
   | { status: "loading-team" }
@@ -24,7 +25,14 @@ export function TeamWeeklyReview() {
         if (!response.ok) throw new Error();
         const me = await response.json();
         const teamId: string | undefined = me.active_teams?.[0]?.id;
-        setState(teamId ? { status: "idle", teamId } : { status: "no-team" });
+        if (!teamId) {
+          setState({ status: "no-team" });
+          return;
+        }
+        // A team weekly review only makes sense once a second athlete has
+        // joined — a solo athlete's own WeeklyReview already covers them.
+        const team = await getTeam(teamId, controller.signal);
+        setState(team.members.length >= 2 ? { status: "idle", teamId } : { status: "no-team" });
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;

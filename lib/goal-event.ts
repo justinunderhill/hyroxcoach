@@ -1,10 +1,12 @@
 import { authenticatedFetch } from "@/lib/auth/client";
 
+export type EventType = "hyrox_singles" | "hyrox_doubles";
+
 export type GoalEvent = {
   id: string;
   team_id: string;
   name: string;
-  event_type: "hyrox_doubles";
+  event_type: EventType;
   event_date: string;
   division: string | null;
   location: string | null;
@@ -17,6 +19,7 @@ export type GoalEvent = {
 
 export type GoalEventUpsert = {
   name: string;
+  event_type: EventType;
   event_date: string;
   division?: string | null;
   location?: string | null;

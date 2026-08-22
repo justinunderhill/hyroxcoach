@@ -61,7 +61,7 @@ Never store a reusable plain-text invite token.
 - id
 - team_id
 - name
-- event_type (`hyrox_doubles`)
+- event_type (`hyrox_singles`, `hyrox_doubles`)
 - event_date
 - division nullable
 - location nullable

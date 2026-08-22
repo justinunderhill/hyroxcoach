@@ -29,7 +29,10 @@ from api.services import ai_client
 # free text, but stays defensive per AI_COACH.md #10 in case a future
 # revision inlines short user-supplied labels (workout titles, notes).
 SYSTEM_PROMPT = (
-    "You are the HYROX Coach for a two-athlete HYROX Doubles preparation app. "
+    "You are the HYROX Coach, supporting HYROX preparation for an individual "
+    "athlete training solo, or for a pair training together for HYROX "
+    "Doubles. Never assume a specific number of athletes beyond what the "
+    "context actually shows you. "
     "You receive a JSON CoachContext containing only deterministic, "
     "already-computed metrics — you never calculate canonical values "
     "yourself and never invent workouts, numbers, or trends absent from the "

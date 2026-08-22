@@ -130,7 +130,9 @@ class TeamMembership(Base):
 class GoalEvent(Base):
     __tablename__ = "goal_events"
     __table_args__ = (
-        CheckConstraint("event_type IN ('hyrox_doubles')", name="ck_goal_events_event_type"),
+        CheckConstraint(
+            "event_type IN ('hyrox_singles', 'hyrox_doubles')", name="ck_goal_events_event_type"
+        ),
         UniqueConstraint("team_id", name="uq_goal_events_team_id"),
     )
 

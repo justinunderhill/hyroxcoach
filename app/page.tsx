@@ -28,12 +28,12 @@ export default function Home() {
               Competitive athlete intelligence
             </p>
             <h1 className="max-w-3xl text-balance text-4xl font-semibold leading-[1.04] tracking-[-0.055em] text-ink sm:text-6xl">
-              Train individually.{" "}
-              <span className="text-lime">Arrive ready together.</span>
+              Train solo. <span className="text-lime">Or arrive ready together.</span>
             </h1>
             <p className="mt-6 max-w-2xl text-pretty text-base leading-7 text-muted sm:text-lg">
-              HYROX Coach tracks two athletes preparing for one race — running, stations, strength
-              and recovery — and turns it into a shared read on whether you&apos;re actually ready.
+              HYROX Coach tracks your preparation — running, stations, strength and recovery — and
+              turns it into a clear read on whether you&apos;re actually ready. Training alone for
+              Singles or with a partner for Doubles, it works the same way.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">

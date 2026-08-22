@@ -11,7 +11,7 @@ It should answer:
 - Is performance improving?
 - What has been neglected?
 - Is recent training load sensible relative to the available evidence?
-- How are the two athletes progressing as a pair?
+- If training with a partner, how are the two athletes progressing as a pair?
 - What should receive attention next?
 
 ## 2. Coaching scopes
